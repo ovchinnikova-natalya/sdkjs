@@ -489,10 +489,37 @@ var editor;
       }
   };
 
-  spreadsheet_api.prototype.asc_TextToColumns = function(options) {
+  spreadsheet_api.prototype.asc_TextImport = function(options, callback, bPaste) {
+    if (this.canEdit()) {
+      var t = this;
+      AscCommon.ShowDocumentFileDialog(function (error, files) {
+        if (Asc.c_oAscError.ID.No !== error) {
+          t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+          return;
+        }
+        var format = AscCommon.GetFileExtension(files[0].name);
+        var reader = new FileReader();
+        reader.onload = function () {
+
+          callback(AscCommon.parseText(reader.result, options, true));
+          //t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
+
+          //t.test({data: new Uint8Array(reader.result), format: format}, oOptions);
+        };
+        reader.onerror = function () {
+          t.sendEvent("asc_onError", Asc.c_oAscError.ID.Unknown, Asc.c_oAscError.Level.NoCritical);
+        };
+
+        reader.readAsText(files[0]);
+      });
+    }
+  };
+
+
+  spreadsheet_api.prototype.asc_TextToColumns = function(options, opt_text) {
 	  if (this.canEdit()) {
           var ws = this.wb.getWorksheet();
-		  var text = ws.getRangeText();
+		  var text = opt_text ? opt_text : ws.getRangeText();
 		  var specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
 		  if(!specialPasteHelper.specialPasteProps) {
 			  specialPasteHelper.specialPasteProps = new Asc.SpecialPasteProps();
@@ -3884,8 +3911,10 @@ var editor;
 			var format = AscCommon.GetFileExtension(files[0].name);
 			var reader = new FileReader();
 			reader.onload = function () {
-				var c = 123;
-				t.test({data: new Uint8Array(reader.result), format: format}, oOptions);
+
+              t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
+
+				//t.test({data: new Uint8Array(reader.result), format: format}, oOptions);
 			};
 			reader.onerror = function () {
 				t.sendEvent("asc_onError", Asc.c_oAscError.ID.Unknown, Asc.c_oAscError.Level.NoCritical);
