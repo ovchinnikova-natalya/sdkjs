@@ -1391,7 +1391,7 @@
 			this.SpellCheckApi.log = true;
 			this.SpellCheckApi.worker = new CSpellchecker({
 				enginePath: "../../../../sdkjs/common/spell/spell",
-				dictionariesPath: "./../dictionaries"
+				dictionariesPath: "./../../../../dictionaries"
 			});
 			this.SpellCheckApi.checkDictionary = function (lang) {
 				if (this.log) console.log("checkDictionary: " + lang + ": " + this.worker.checkDictionary(lang));
