@@ -472,7 +472,7 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_TextImport = function(options, callback, bPaste) {
-    //return this.asc_TextFromUrl(options, callback);
+    return this.asc_TextFromUrl(options, callback);
     //return this.asc_TextFromFile(options, callback);
     if (this.canEdit()) {
       var text;
@@ -523,7 +523,7 @@ var editor;
   spreadsheet_api.prototype.asc_TextFromFile = function(options, callback) {
     var t = this;
 
-    AscCommon.ShowDocumentFileDialog(function (error, files) {
+    AscCommon.ShowTextFileDialog(function (error, files) {
       if (Asc.c_oAscError.ID.No !== error) {
         t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
         return;
@@ -541,6 +541,15 @@ var editor;
       reader.readAsText(files[0]);
     });
   };
+
+	spreadsheet_api.prototype.endInsertDocumentUrls = function()
+	{
+		if (this.insertDocumentUrlsData) {
+			this.insertDocumentUrlsData.endCallback(this);
+			this.insertDocumentUrlsData = null;
+			//this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.DownloadAs);
+		}
+	};
 
   spreadsheet_api.prototype.asc_TextToColumns = function(options, opt_text) {
 	  if (this.canEdit()) {
