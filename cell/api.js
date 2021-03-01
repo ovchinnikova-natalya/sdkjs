@@ -126,6 +126,8 @@ var editor;
 
 	this.openingEnd = {bin: false, xlsxStart: false, xlsx: false, data: null};
 
+    this.insertDocumentUrlsData = null;
+
     this._init();
     return this;
   }
@@ -470,44 +472,28 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_TextImport = function(options, callback, bPaste) {
-      if (this.canEdit()) {
-        var text;
-        if(bPaste) {
-			text = AscCommon.g_specialPasteHelper.GetPastedData(true);
-        } else {
-			var ws = this.wb.getWorksheet();
-			text = ws.getRangeText();
-        }
-        if(!text) {
-            //error
-            //no data was selected to parse
-			this.sendEvent('asc_onError', c_oAscError.ID.NoDataToParse, c_oAscError.Level.NoCritical);
-			callback(false);
-			return;
-        }
-        callback(AscCommon.parseText(text, options, true));
+    return this.asc_TextFromUrl();
+    if (this.canEdit()) {
+      var text;
+      if(bPaste) {
+        text = AscCommon.g_specialPasteHelper.GetPastedData(true);
+      } else {
+        var ws = this.wb.getWorksheet();
+        text = ws.getRangeText();
       }
+      if(!text) {
+        //error
+        //no data was selected to parse
+        this.sendEvent('asc_onError', c_oAscError.ID.NoDataToParse, c_oAscError.Level.NoCritical);
+        callback(false);
+        return;
+      }
+      callback(AscCommon.parseText(text, options, true));
+    }
   };
 
-  spreadsheet_api.prototype.asc_TextImport = function(options, callback, bPaste) {
+  spreadsheet_api.prototype.asc_TextFromUrl = function() {
     if (this.canEdit()) {
-
-
-      // read text from URL location
-      /*var request = new XMLHttpRequest();
-      request.open('POST', 'http://150stalfimovo.edusite.ru/DswMedia/alexrus_state.txt', true);
-      request.send(null);
-      request.onreadystatechange = function () {
-        if (request.readyState === 4 && request.status === 200) {
-          var type = request.getResponseHeader('Content-Type');
-          if (type.indexOf("text") !== 1) {
-            return request.responseText;
-          }
-        }
-      }
-
-      return;*/
-
       var document = {url: "http://www.eunet.lv/library/koi/KAFKA/rec_dnewniki.txt", format: "TXT"};
       var stream = null;
       var oApi = this;
@@ -530,48 +516,12 @@ var editor;
             _api.endInsertDocumentUrls();
           }, "text");
         }, endCallback: function (_api) {
-
-          if (stream) {
-            AscCommonWord.CompareBinary(oApi, stream, oOptions);
-            stream = null;
-          }
         }
       };
 
-      /*var options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
-      options.isNaturalDownload = true;
-      options.oMailMergeSendData = true;*/
       var options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
       options.isNaturalDownload = true;
       this.asc_DownloadAs(options);
-
-      return;
-
-
-
-
-
-      var t = this;
-      AscCommon.ShowDocumentFileDialog(function (error, files) {
-        if (Asc.c_oAscError.ID.No !== error) {
-          t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-          return;
-        }
-        var format = AscCommon.GetFileExtension(files[0].name);
-        var reader = new FileReader();
-        reader.onload = function () {
-
-          callback(AscCommon.parseText(reader.result, options, true));
-          //t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
-
-          //t.test({data: new Uint8Array(reader.result), format: format}, oOptions);
-        };
-        reader.onerror = function () {
-          t.sendEvent("asc_onError", Asc.c_oAscError.ID.Unknown, Asc.c_oAscError.Level.NoCritical);
-        };
-
-        reader.readAsDataURL(files[0]);
-      });
     }
   };
 
@@ -1034,6 +984,19 @@ var editor;
       var printPagesData = this.wb.calcPagesPrint(options.advancedOptions);
       var pdfPrinterMemory = this.wb.printSheets(printPagesData).DocumentRenderer.Memory;
       dataContainer.data = oAdditionalData["nobase64"] ? pdfPrinterMemory.GetData() : pdfPrinterMemory.GetBase64Memory();
+    } else if (this.insertDocumentUrlsData) {
+      var last = this.insertDocumentUrlsData.documents.shift();
+      oAdditionalData['url'] = last.url;
+      oAdditionalData['format'] = last.format;
+      if (last.token) {
+        oAdditionalData['tokenDownload'] = last.token;
+        //remove to reduce message size
+        oAdditionalData['tokenSession'] = undefined;
+      }
+      oAdditionalData['outputurls']= true;
+      // ToDo select txt params
+      oAdditionalData["codepage"] = AscCommon.c_oAscCodePageUtf8;
+      dataContainer.data = last.data;
     } else {
       var oBinaryFileWriter = new AscCommonExcel.BinaryFileWriter(this.wbModel);
       if (c_oAscFileType.CSV === fileType) {
@@ -1054,165 +1017,9 @@ var editor;
     }
   };
 
-  spreadsheet_api.prototype._downloadAs    = function(actionType, options, oAdditionalData, dataContainer)
-  {
-    var t = this;
-    var fileType = options.fileType;
-    if (c_oAscAsyncAction.SendMailMerge === actionType)
-    {
-      oAdditionalData["c"] = 'sendmm';
-      oAdditionalData["userindex"] = this.CoAuthoringApi.get_indexUser();
-    }
-    else if (this.WordControl && !this.WordControl.m_oLogicDocument)
-    {
-      oAdditionalData["c"] = 'savefromorigin';
-    }
-
-    if ('savefromorigin' === oAdditionalData["c"])
-    {
-      oAdditionalData["format"] = this.documentFormat;
-    }
-    else if (null == options.oDocumentMailMerge && (c_oAscFileType.PDF === fileType || c_oAscFileType.PDFA === fileType))
-    {
-      var isSelection = false;
-      if (options.advancedOptions && options.advancedOptions && (Asc.c_oAscPrintType.Selection === options.advancedOptions.asc_getPrintType()))
-        isSelection = true;
-
-      var dd             = this.WordControl && this.WordControl.m_oDrawingDocument;
-      if (isSelection)
-        dd.GenerateSelectionPrint();
-
-      dataContainer.data = dd.ToRendererPart(oAdditionalData["nobase64"], isSelection);
-      //console.log(oAdditionalData["data"]);
-    }
-    else if (c_oAscFileType.JSON === fileType)
-    {
-      oAdditionalData['url'] = this.mailMergeFileData['url'];
-      oAdditionalData['format'] = this.mailMergeFileData['fileType'];
-      if (this.mailMergeFileData['token']) {
-        oAdditionalData['tokenDownload'] = this.mailMergeFileData['token'];
-        //remove to reduce message size
-        oAdditionalData['tokenSession'] = undefined;
-      }
-      // ToDo select csv params
-      oAdditionalData['codepage']  = AscCommon.c_oAscCodePageUtf8;
-      oAdditionalData['delimiter'] = AscCommon.c_oAscCsvDelimiter.Comma;
-    }
-    else if (this.insertDocumentUrlsData)
-    {
-      var last = this.insertDocumentUrlsData.documents.shift();
-      oAdditionalData['url'] = last.url;
-      oAdditionalData['format'] = last.format;
-      if (last.token) {
-        oAdditionalData['tokenDownload'] = last.token;
-        //remove to reduce message size
-        oAdditionalData['tokenSession'] = undefined;
-      }
-      oAdditionalData['outputurls']= true;
-      // ToDo select txt params
-      oAdditionalData["codepage"] = AscCommon.c_oAscCodePageUtf8;
-      dataContainer.data = last.data;
-    }
-    else if (c_oAscFileType.HTML === fileType && null == options.oDocumentMailMerge && null == options.oMailMergeSendData)
-    {
-      //в asc_nativeGetHtml будет вызван select all, чтобы выделился документ должны выйти из колонтитулов и автофигур
-      var _e     = new AscCommon.CKeyboardEvent();
-      _e.CtrlKey = false;
-      _e.KeyCode = 27;
-      this.WordControl.m_oLogicDocument.OnKeyDown(_e);
-      //сделано через сервер, потому что нет простого механизма сохранения на клиенте
-      dataContainer.data = '\ufeff' + window["asc_docs_api"].prototype["asc_nativeGetHtml"].call(this);
-    }
-    else
-    {
-      if (options.advancedOptions instanceof Asc.asc_CTextOptions)
-      {
-        oAdditionalData["codepage"] = options.advancedOptions.asc_getCodePage();
-      }
-      var oLogicDocument;
-      if (null != options.oDocumentMailMerge)
-        oLogicDocument = options.oDocumentMailMerge;
-      else
-        oLogicDocument = this.WordControl.m_oLogicDocument;
-      var oBinaryFileWriter;
-      if (null != options.oMailMergeSendData && c_oAscFileType.HTML === options.oMailMergeSendData.get_MailFormat())
-        oBinaryFileWriter = new AscCommonWord.BinaryFileWriter(oLogicDocument, false, true, options.compatible);
-      else
-        oBinaryFileWriter = new AscCommonWord.BinaryFileWriter(oLogicDocument, undefined, undefined, options.compatible);
-      dataContainer.data = oBinaryFileWriter.Write(oAdditionalData["nobase64"]);
-    }
-    if (null != options.oMailMergeSendData)
-    {
-      oAdditionalData["mailmergesend"] = options.oMailMergeSendData;
-      var MailMergeMap                 = null;
-      var aJsonOut                     = [];
-      if (MailMergeMap)
-      {
-        if (MailMergeMap.length > 0)
-        {
-          var oFirstRow = MailMergeMap[0];
-          var aRowOut   = [];
-          for (var i in oFirstRow)
-            aRowOut.push(i);
-          aJsonOut.push(aRowOut);
-        }
-        //todo может надо запоминать порядок for in в первом столбце, если for in будет по-разному обходить строки
-        for (var i = 0; i < MailMergeMap.length; ++i)
-        {
-          var oRow    = MailMergeMap[i];
-          var aRowOut = [];
-          for (var j in oRow)
-            aRowOut.push(oRow[j]);
-          aJsonOut.push(aRowOut);
-        }
-      }
-      var editorData = dataContainer.data;
-      dataContainer.data = JSON.stringify(aJsonOut);
-      //options.oMailMergeSendData.put_IsJson(true);
-      //save Editor.bin after json
-      var callback = options.callback;
-      options.callback = function (incomeObject) {
-        oAdditionalData["savekey"] = incomeObject["data"];
-        var _dataContainer = {data : editorData, part : null, index : 0, count : 0};
-        //options.oMailMergeSendData.put_IsJson(false);
-
-        AscCommon.saveWithParts(function(fCallback1, oAdditionalData1, dataContainer1) {
-          sendCommand(t, fCallback1, oAdditionalData1, dataContainer1);
-        }, t.fCurCallback, callback, oAdditionalData, _dataContainer);
-      }
-    }
-
-    if (window.isCloudCryptoDownloadAs)
-    {
-      var sParamXml = ("<m_nCsvTxtEncoding>" + oAdditionalData["codepage"] + "</m_nCsvTxtEncoding>");
-      window["AscDesktopEditor"]["CryptoDownloadAs"](dataContainer.data, fileType, sParamXml);
-      return true;
-    }
-  };
-
   spreadsheet_api.prototype.processSavedFile             = function(url, downloadType)
   {
-    var t = this;
-    if (this.mailMergeFileData)
-    {
-      this.mailMergeFileData = null;
-      AscCommon.loadFileContent(url, function(httpRequest)
-      {
-        if (null === httpRequest)
-        {
-          t.sendEvent("asc_onError", c_oAscError.ID.MailMergeLoadFile, c_oAscError.Level.NoCritical);
-          return;
-        }
-        try
-        {
-          t.asc_StartMailMergeByList(JSON.parse(httpRequest.responseText));
-        } catch (e)
-        {
-          t.sendEvent("asc_onError", c_oAscError.ID.MailMergeLoadFile, c_oAscError.Level.NoCritical);
-        }
-      });
-    }
-    else if (this.insertDocumentUrlsData && this.insertDocumentUrlsData.convertCallback)
+    if (this.insertDocumentUrlsData && this.insertDocumentUrlsData.convertCallback)
     {
       this.insertDocumentUrlsData.convertCallback(this, url);
     }
@@ -4118,6 +3925,7 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_setCellBold = function(isBold) {
+    return this.asc_TextFromFile();
     var ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellBold) {
       ws.objectRender.controller.setCellBold(isBold);
@@ -4127,9 +3935,7 @@ var editor;
     }
   };
 
-	spreadsheet_api.prototype.asc_setCellBold = function(isBold) {
-
-
+	spreadsheet_api.prototype.asc_TextFromFile = function(isBold) {
 		var t = this;
 		AscCommon.ShowDocumentFileDialog(function (error, files) {
 			if (Asc.c_oAscError.ID.No !== error) {
@@ -4151,41 +3957,6 @@ var editor;
 			reader.readAsText(files[0]);
 		});
 
-	};
-
-	spreadsheet_api.prototype.test = function (document, oOptions) {
-		var stream = null;
-		var oApi = this;
-		this.insertDocumentUrlsData = {
-			imageMap: null, documents: [document], convertCallback: function (_api, url) {
-				_api.insertDocumentUrlsData.imageMap = url;
-				if (!url['output.bin']) {
-					_api.endInsertDocumentUrls();
-					_api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl,
-						Asc.c_oAscError.Level.NoCritical);
-					return;
-				}
-				AscCommon.loadFileContent(url['output.bin'], function (httpRequest) {
-					if (null === httpRequest || !(stream = AscCommon.initStreamFromResponse(httpRequest))) {
-						_api.endInsertDocumentUrls();
-						_api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl,
-							Asc.c_oAscError.Level.NoCritical);
-						return;
-					}
-					_api.endInsertDocumentUrls();
-				}, "arraybuffer");
-			}, endCallback: function (_api) {
-
-				if (stream) {
-					AscCommonWord.CompareBinary(oApi, stream, oOptions);
-					stream = null;
-				}
-			}
-		};
-
-		var options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.CANVAS_WORD);
-		options.isNaturalDownload = true;
-		this.asc_DownloadAs(options);
 	};
 
   spreadsheet_api.prototype.asc_setCellItalic = function(isItalic) {
