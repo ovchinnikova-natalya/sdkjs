@@ -472,7 +472,7 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_TextImport = function(options, callback, bPaste) {
-    return this.asc_TextFromUrl(options, callback);
+    //return this.asc_TextFromUrl(null, options, callback);
     //return this.asc_TextFromFile(options, callback);
     if (this.canEdit()) {
       var text;
@@ -493,9 +493,13 @@ var editor;
     }
   };
 
-  spreadsheet_api.prototype.asc_TextFromUrl = function(options, callback) {
+  spreadsheet_api.prototype.asc_TextFromUrl = function(url, options, callback) {
     if (this.canEdit()) {
-      var document = {url: "http://www.eunet.lv/library/koi/KAFKA/rec_dnewniki.txt", format: "TXT"};
+      //test
+      if (!url) {
+        url = "http://www.eunet.lv/library/koi/KAFKA/rec_dnewniki.txt";
+      }
+      var document = {url: url, format: "TXT"};
       this.insertDocumentUrlsData = {
         imageMap: null, documents: [document], convertCallback: function (_api, url) {
           _api.insertDocumentUrlsData.imageMap = url;
@@ -508,6 +512,7 @@ var editor;
           AscCommon.loadFileContent(url['output.txt'], function (httpRequest) {
             if (httpRequest && httpRequest.responseText) {
               callback(AscCommon.parseText(httpRequest.responseText, options, true));
+              _api.endInsertDocumentUrls();
             }
           }, "text");
         }, endCallback: function (_api) {
