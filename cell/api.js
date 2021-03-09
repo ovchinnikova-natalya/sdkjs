@@ -128,6 +128,8 @@ var editor;
 
     this.insertDocumentUrlsData = null;
 
+    this._textFromFileOrUrl = null;
+
     this._init();
     return this;
   }
@@ -493,12 +495,30 @@ var editor;
     }
   };
 
-  spreadsheet_api.prototype.asc_TextFromUrl = function(url, options, callback) {
+  spreadsheet_api.prototype.asc_TextFromFileOrUrl = function(options, callback, url, _getParsedText) {
     if (this.canEdit()) {
-      //test
-      if (!url) {
-        url = "http://www.eunet.lv/library/koi/KAFKA/rec_dnewniki.txt";
+      if (_getParsedText) {
+        var text = this._textFromFileOrUrl;
+        if(!text) {
+          //error
+          //no data was selected to parse
+          this.sendEvent('asc_onError', c_oAscError.ID.NoDataToParse, c_oAscError.Level.NoCritical);
+          callback(false);
+          return;
+        }
+        callback(AscCommon.parseText(text, options, true));
+      } else {
+        if (url) {
+          this._getTextFromUrl(url, options, callback);
+        } else {
+          this._getTextFromFile(options, callback);
+        }
       }
+    }
+  };
+
+  spreadsheet_api.prototype._getTextFromUrl = function(url, options, callback) {
+    if (this.canEdit()) {
       var document = {url: url, format: "TXT"};
       this.insertDocumentUrlsData = {
         imageMap: null, documents: [document], convertCallback: function (_api, url) {
@@ -525,7 +545,7 @@ var editor;
     }
   };
 
-  spreadsheet_api.prototype.asc_TextFromFile = function(options, callback) {
+  spreadsheet_api.prototype._getTextFromFile = function(options, callback) {
     var t = this;
 
     AscCommon.ShowTextFileDialog(function (error, files) {
@@ -556,10 +576,16 @@ var editor;
 		}
 	};
 
-  spreadsheet_api.prototype.asc_TextToColumns = function(options, opt_text) {
+  spreadsheet_api.prototype.asc_TextToColumns = function(options, opt_text, opt_activeRange) {
 	  if (this.canEdit()) {
           var ws = this.wb.getWorksheet();
-		  var text = opt_text ? opt_text : ws.getRangeText();
+          var text;
+          if (opt_activeRange && this._textFromFileOrUrl) {
+            text = this._textFromFileOrUrl;
+            this._textFromFileOrUrl = null;
+          } else {
+            text = opt_text ? opt_text : ws.getRangeText();
+          }
 		  var specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
 		  if(!specialPasteHelper.specialPasteProps) {
 			  specialPasteHelper.specialPasteProps = new Asc.SpecialPasteProps();
