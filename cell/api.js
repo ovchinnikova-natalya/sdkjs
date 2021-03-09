@@ -128,8 +128,6 @@ var editor;
 
     this.insertDocumentUrlsData = null;
 
-    this._textFromFileOrUrl = null;
-
     this._init();
     return this;
   }
@@ -498,7 +496,7 @@ var editor;
   spreadsheet_api.prototype.asc_TextFromFileOrUrl = function(options, callback, url, _getParsedText) {
     if (this.canEdit()) {
       if (_getParsedText) {
-        var text = this._textFromFileOrUrl;
+        var text = AscCommon.g_specialPasteHelper.textFromFileOrUrl;
         if(!text) {
           //error
           //no data was selected to parse
@@ -531,6 +529,7 @@ var editor;
           }
           AscCommon.loadFileContent(url['output.txt'], function (httpRequest) {
             if (httpRequest && httpRequest.responseText) {
+              AscCommon.g_specialPasteHelper.textFromFileOrUrl = httpRequest.responseText;
               callback(AscCommon.parseText(httpRequest.responseText, options, true));
               _api.endInsertDocumentUrls();
             }
@@ -555,6 +554,7 @@ var editor;
       }
       var reader = new FileReader();
       reader.onload = function () {
+        AscCommon.g_specialPasteHelper.textFromFileOrUrl = reader.result;
         callback(AscCommon.parseText(reader.result, options, true));
         //t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
       };
@@ -566,6 +566,14 @@ var editor;
       reader.readAsText(files[0]);
     });
   };
+
+	spreadsheet_api.prototype.asc_getTextFromFileOrUrl = function() {
+		return AscCommon.g_specialPasteHelper.textFromFileOrUrl;
+	};
+
+	spreadsheet_api.prototype.asc_cleanTextFromFileOrUrl = function() {
+		AscCommon.g_specialPasteHelper.textFromFileOrUrl = null;
+	};
 
 	spreadsheet_api.prototype.endInsertDocumentUrls = function()
 	{
@@ -579,13 +587,7 @@ var editor;
   spreadsheet_api.prototype.asc_TextToColumns = function(options, opt_text, opt_activeRange) {
 	  if (this.canEdit()) {
           var ws = this.wb.getWorksheet();
-          var text;
-          if (opt_activeRange && this._textFromFileOrUrl) {
-            text = this._textFromFileOrUrl;
-            this._textFromFileOrUrl = null;
-          } else {
-            text = opt_text ? opt_text : ws.getRangeText();
-          }
+          var text = opt_text ? opt_text : ws.getRangeText();
 		  var specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
 		  if(!specialPasteHelper.specialPasteProps) {
 			  specialPasteHelper.specialPasteProps = new Asc.SpecialPasteProps();
@@ -3981,7 +3983,6 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_setCellBold = function(isBold) {
-    return this.asc_TextFromFile();
     var ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellBold) {
       ws.objectRender.controller.setCellBold(isBold);
@@ -5247,6 +5248,10 @@ var editor;
   prot["asc_Redo"] = prot.asc_Redo;
   prot["asc_TextImport"] = prot.asc_TextImport;
   prot["asc_TextToColumns"] = prot.asc_TextToColumns;
+  prot["asc_TextFromFileOrUrl"] = prot.asc_TextFromFileOrUrl;
+  prot["asc_getTextFromFileOrUrl"] = prot.asc_getTextFromFileOrUrl;
+  prot["asc_cleanTextFromFileOrUrl"] = prot.asc_cleanTextFromFileOrUrl;
+
 
 
   prot["asc_getDocumentName"] = prot.asc_getDocumentName;
