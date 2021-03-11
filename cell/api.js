@@ -3816,6 +3816,33 @@ var editor;
 		this._isLockedSparkline(id, changeSparkline);
 	};
 
+	spreadsheet_api.prototype.asc_addSparklineGroup = function (type, dataRange, locationRange) {
+		var t = this;
+		var addSparkline = function (res) {
+			if (res) {
+				History.Create_NewPoint();
+				History.StartTransaction();
+				ws.addSparklineGroups(modelSparkline);
+				modelSparkline.set(newSparkLine);
+				History.EndTransaction();
+				t.wb._onWSSelectionChanged();
+				t.wb.getWorksheet().draw();
+			}
+		};
+
+		var ws = this.wbModel.getActiveWs();
+		var newSparkLine;
+
+		newSparkLine = ws.generateSparklineGroup(type);
+		newSparkLine.default();
+
+
+		if (newSparkLine) {
+			var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
+			this._isLockedSparkline(modelSparkline.Id, addSparkline);
+		}
+	};
+
     spreadsheet_api.prototype.asc_setListType = function (type, subtype) {
       var t = this;
         var sNeedFont = AscFormat.fGetFontByNumInfo(type, subtype);

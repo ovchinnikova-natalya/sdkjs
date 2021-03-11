@@ -7078,6 +7078,11 @@
 			this.insertSparklineGroup(sparklineGroups);
 		}
 	};
+	Worksheet.prototype.generateSparklineGroup = function (type) {
+		var newSparkline = new window['AscCommonExcel'].sparklineGroup();
+		//newSparkline.setPreset(type);
+		return newSparkline
+	};
 	Worksheet.prototype.insertSparklineGroup = function (sparklineGroup) {
 		this.aSparklineGroups.push(sparklineGroup);
 	};
