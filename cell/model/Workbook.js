@@ -7072,6 +7072,12 @@
             }
 		}
 	};
+	Worksheet.prototype.addSparklineGroups = function (sparklineGroups) {
+		if (sparklineGroups) {
+			History.Add(new AscDFH.CChangesDrawingsSparklinesRemove(sparklineGroups, true));
+			this.insertSparklineGroup(sparklineGroups);
+		}
+	};
 	Worksheet.prototype.insertSparklineGroup = function (sparklineGroup) {
 		this.aSparklineGroups.push(sparklineGroup);
 	};
