@@ -3822,8 +3822,11 @@ var editor;
 			if (res) {
 				History.Create_NewPoint();
 				History.StartTransaction();
-				ws.addSparklineGroups(modelSparkline);
+				//ws.addSparklineGroups(modelSparkline);
+              var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
+              modelSparkline.worksheet = ws;
 				modelSparkline.set(newSparkLine);
+              ws.insertSparklineGroup(modelSparkline);
 				History.EndTransaction();
 				t.wb._onWSSelectionChanged();
 				t.wb.getWorksheet().draw();
@@ -3836,11 +3839,11 @@ var editor;
 		newSparkLine = ws.generateSparklineGroup(type);
 		newSparkLine.default();
 
-
-		if (newSparkLine) {
+      addSparkline(true);
+		/*if (newSparkLine) {
 			var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
 			this._isLockedSparkline(modelSparkline.Id, addSparkline);
-		}
+		}*/
 	};
 
     spreadsheet_api.prototype.asc_setListType = function (type, subtype) {
@@ -3927,6 +3930,9 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_setCellBold = function(isBold) {
+    this.asc_addSparklineGroup();
+    return;
+
     var ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellBold) {
       ws.objectRender.controller.setCellBold(isBold);
