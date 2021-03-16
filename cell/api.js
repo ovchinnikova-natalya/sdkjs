@@ -3816,7 +3816,7 @@ var editor;
 		this._isLockedSparkline(id, changeSparkline);
 	};
 
-	spreadsheet_api.prototype.asc_addSparklineGroup = function (type, dataRange, locationRange) {
+	spreadsheet_api.prototype.asc_addSparklineGroup = function (type, sDataRange, sLocationRange) {
 		var t = this;
 		var addSparkline = function (res) {
 			if (res) {
@@ -3826,12 +3826,29 @@ var editor;
               var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
               modelSparkline.worksheet = ws;
 				modelSparkline.set(newSparkLine);
+				//modelSparkline.generateSparklines();
               ws.insertSparklineGroup(modelSparkline);
 				History.EndTransaction();
 				t.wb._onWSSelectionChanged();
 				t.wb.getWorksheet().draw();
 			}
 		};
+
+		//поскольку проверка данных - требует проверки одновременно двух значений
+		var dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
+		var locationRange = AscCommonExcel.g_oRangeCache.getAscRange(sLocationRange);
+		if (!dataRange || !locationRange) {
+			return Asc.c_oAscError.ID.DataRangeError;
+		}
+		var isOneRow = locationRange.r1 === locationRange.r2;
+		var isOneCol = locationRange.c1 === locationRange.c2;
+		if (!isOneRow && !isOneCol) {
+			return Asc.c_oAscError.ID.SingleColumnOrRowError;
+		}
+		if ((isOneRow && (locationRange.c2 - locationRange.c1 + 1) % (locationRange.c2 - locationRange.c1 + 1)) !== 0 ||
+			(isOneCol && (locationRange.r2 - locationRange.r1 + 1) % (locationRange.r2 - locationRange.r1 + 1)) !== 0) {
+			return Asc.c_oAscError.ID.LocationOrDataRangeError;
+		}
 
 		var ws = this.wbModel.getActiveWs();
 		var newSparkLine;
@@ -3840,6 +3857,8 @@ var editor;
 		newSparkLine.default();
 
       addSparkline(true);
+		return Asc.c_oAscError.ID.No;
+
 		/*if (newSparkLine) {
 			var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
 			this._isLockedSparkline(modelSparkline.Id, addSparkline);
