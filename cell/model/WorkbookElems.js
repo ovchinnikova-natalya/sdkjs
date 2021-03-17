@@ -5846,6 +5846,22 @@ function RangeDataManagerElem(bbox, data)
 		var unionRange = isUnion ? result.getUnion() : result;
 		return unionRange.isSingleRange() ? unionRange : result;
 	};
+	sparklineGroup.prototype.setSparklinesFromRange = function (dataRange, locationRange) {
+		var isVert = locationRange.c1 === locationRange.c2;
+		var steps = !isVert ? locationRange.c2 - locationRange.c1 + 1 : locationRange.r2 - locationRange.r1 + 1;
+		var lengthDataRange = (dataRange.r2 - dataRange.r1) / steps;
+
+		for (var i = 0; i < steps; i++) {
+			var sL = new sparkline();
+			var f = this.worksheet.sName + "!" + new Asc.Range(dataRange.c1 + i * lengthDataRange, dataRange.r1, dataRange.c1 + (i + 1) * lengthDataRange, dataRange.r2).getName();
+			sL.setF(f);
+			var _col = !isVert ? locationRange.c1 + i : locationRange.c1;
+			var _row = isVert ? locationRange.r1 + i : locationRange.r1;
+			sL.sqRef = new Asc.Range(_col, _row, _col, _row);
+			sL.sqRef.setAbs(true, true, true, true);
+			this.arrSparklines.push(sL);
+		}
+	};
 	sparklineGroup.prototype.asc_getId = function () {
 		return this.Id;
 	};
