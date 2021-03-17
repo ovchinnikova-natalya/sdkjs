@@ -5641,6 +5641,51 @@
 			this._drawSelection();
 		}
 	};
+	WorksheetView.prototype.addSparklineGroup = function (sDataRange, sLocationRange) {
+		var t = this;
+		if (!sDataRange || !sLocationRange) {
+			sDataRange = "b2:g3";
+			sLocationRange = "C5:C10";
+			//return Asc.c_oAscError.ID.DataRangeError;
+		}
+
+		var dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
+		var locationRange = AscCommonExcel.g_oRangeCache.getAscRange(sLocationRange);
+
+		var addSparkline = function (res) {
+			if (res) {
+				History.Create_NewPoint();
+				History.StartTransaction();
+
+				var modelSparkline = new AscCommonExcel.sparklineGroup(true);
+				modelSparkline.worksheet = ws;
+				modelSparkline.set(newSparkLine);
+				modelSparkline.setSparklinesFromRange(dataRange, locationRange, true);
+				ws.addSparklineGroups(modelSparkline);
+
+				History.EndTransaction();
+				t.workbook._onWSSelectionChanged();
+				t.workbook.getWorksheet().draw();
+			}
+		};
+
+		//здесь добавляю проверку данных - поскольку требуется проверка одновременно двух значений
+		var error = AscCommonExcel.sparklineGroup.prototype.isValidDataRef(dataRange, locationRange);
+		if (!error) {
+			//чтобы добавить все данные в историю создаём ещё один sparklineGroup и заполняем его всеми необходимыми опциями
+			var ws = this.model;
+			var newSparkLine = new AscCommonExcel.sparklineGroup();
+			newSparkLine.default();
+			newSparkLine.type = Asc.c_oAscSparklineType.Column/*type*/;
+
+			this._isLockedCells(locationRange, /*subType*/null, addSparkline);
+
+			return Asc.c_oAscError.ID.No;
+		} else {
+			return error;
+		}
+	};
+
 
     // mouseX - это разница стартовых координат от мыши при нажатии и границы
     WorksheetView.prototype.drawColumnGuides = function ( col, x, y, mouseX ) {

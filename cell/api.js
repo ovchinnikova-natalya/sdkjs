@@ -3799,6 +3799,9 @@ var editor;
   };
 
 	spreadsheet_api.prototype.asc_setSparklineGroup = function (id, oSparklineGroup) {
+		if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
+			return;
+		}
 		var t = this;
 		var changeSparkline = function (res) {
 			if (res) {
@@ -3817,62 +3820,12 @@ var editor;
 	};
 
 	spreadsheet_api.prototype.asc_addSparklineGroup = function (type, sDataRange, sLocationRange) {
-		var t = this;
-		var addSparkline = function (res) {
-			if (res) {
-				History.Create_NewPoint();
-				History.StartTransaction();
-
-				var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
-				modelSparkline.worksheet = ws;
-				modelSparkline.set(newSparkLine);
-				modelSparkline.setSparklinesFromRange(dataRange, locationRange, true);
-				ws.addSparklineGroups(modelSparkline);
-
-				History.EndTransaction();
-				t.wb._onWSSelectionChanged();
-				t.wb.getWorksheet().draw();
-			}
-		};
-
-		if (!sDataRange || !sLocationRange) {
-			sDataRange = "b2:g3";
-			sLocationRange = "C5:C10";
-			//return Asc.c_oAscError.ID.DataRangeError;
+		if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
+			return;
 		}
 
-		//поскольку проверка данных - требует проверки одновременно двух значений
-		var dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
-		var locationRange = AscCommonExcel.g_oRangeCache.getAscRange(sLocationRange);
-		if (!dataRange || !locationRange) {
-			return Asc.c_oAscError.ID.DataRangeError;
-		}
-		var isOneRow = locationRange.r1 === locationRange.r2;
-		var isOneCol = locationRange.c1 === locationRange.c2;
-		if (!isOneRow && !isOneCol) {
-			return Asc.c_oAscError.ID.SingleColumnOrRowError;
-		}
-		var count = isOneRow ? locationRange.c2 - locationRange.c1 + 1 : locationRange.r2 - locationRange.r1 + 1;
-		var countDataRangeRow = dataRange.r2 - dataRange.r1 + 1;
-		var countDataRangeCol = dataRange.c2 - dataRange.c1 + 1;
-		if (count !== countDataRangeRow && count !== countDataRangeCol) {
-			return Asc.c_oAscError.ID.LocationOrDataRangeError;
-		}
-
-		//чтобы добавить все данные в историю создаём ещё один sparklineGroup и заполняем его всеми необходимыми опциями
-		var ws = this.wbModel.getActiveWs();
-		var newSparkLine = new window['AscCommonExcel'].sparklineGroup();
-		newSparkLine.default();
-		newSparkLine.type = Asc.c_oAscSparklineType.Column/*type*/;
-
-
-		addSparkline(true);
-		return Asc.c_oAscError.ID.No;
-
-		/*if (newSparkLine) {
-		 var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
-		 this._isLockedSparkline(modelSparkline.Id, addSparkline);
-		 }*/
+		var wsView = this.wb.getWorksheet();
+		return wsView.addSparklineGroup(sDataRange, sLocationRange);
 	};
 
     spreadsheet_api.prototype.asc_setListType = function (type, subtype) {
