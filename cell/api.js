@@ -3836,8 +3836,8 @@ var editor;
 		};
 
 		if (!sDataRange || !sLocationRange) {
-			sDataRange = "a1:b6";
-			sLocationRange = "C1:C3";
+			sDataRange = "b2:g3";
+			sLocationRange = "C5:C10";
 			//return Asc.c_oAscError.ID.DataRangeError;
 		}
 
@@ -3852,8 +3852,10 @@ var editor;
 		if (!isOneRow && !isOneCol) {
 			return Asc.c_oAscError.ID.SingleColumnOrRowError;
 		}
-		if ((isOneRow && (dataRange.r2 - dataRange.r1 + 1) % (locationRange.c2 - locationRange.c1 + 1)) !== 0 &&
-			(isOneCol && (dataRange.r2 - dataRange.r1 + 1) % (locationRange.r2 - locationRange.r1 + 1)) !== 0) {
+		var count = isOneRow ? locationRange.c2 - locationRange.c1 + 1 : locationRange.r2 - locationRange.r1 + 1;
+		var countDataRangeRow = dataRange.r2 - dataRange.r1 + 1;
+		var countDataRangeCol = dataRange.c2 - dataRange.c1 + 1;
+		if (count !== countDataRangeRow && count !== countDataRangeCol) {
 			return Asc.c_oAscError.ID.LocationOrDataRangeError;
 		}
 
@@ -5610,6 +5612,7 @@ var editor;
 
   // Sparklines
   prot["asc_setSparklineGroup"] = prot.asc_setSparklineGroup;
+  prot["asc_addSparklineGroup"] = prot.asc_addSparklineGroup;
 
   // Cell interface
   prot["asc_getCellInfo"] = prot.asc_getCellInfo;

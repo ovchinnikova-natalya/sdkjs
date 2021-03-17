@@ -5847,17 +5847,24 @@ function RangeDataManagerElem(bbox, data)
 		return unionRange.isSingleRange() ? unionRange : result;
 	};
 	sparklineGroup.prototype.setSparklinesFromRange = function (dataRange, locationRange, addToHistory) {
-		var isVert = locationRange.c1 === locationRange.c2;
-		var steps = !isVert ? locationRange.c2 - locationRange.c1 + 1 : locationRange.r2 - locationRange.r1 + 1;
-		var lengthDataRange = (dataRange.r2 - dataRange.r1 + 1) / steps;
+		var isVertLocationRange = locationRange.c1 === locationRange.c2;
+		var count = !isVertLocationRange ? locationRange.c2 - locationRange.c1 + 1 : locationRange.r2 - locationRange.r1 + 1;
+		var countDataRangeRow = dataRange.r2 - dataRange.r1 + 1;
+		var isVertDataRange = countDataRangeRow === count;
 
 		var newArrSparklines = [];
-		for (var i = 0; i < steps; i++) {
+		for (var i = 0; i < count; i++) {
 			var sL = new sparkline();
-			var f = this.worksheet.sName + "!" + new Asc.Range(dataRange.c1, dataRange.r1 + i * lengthDataRange, dataRange.c2, dataRange.r1 + ((i + 1) * lengthDataRange) - 1).getName();
+
+			var _r1 = isVertDataRange ? i : dataRange.r1;
+			var _r2 = isVertDataRange ? i : dataRange.r2;
+			var _c1 = !isVertDataRange ? i : dataRange.c1;
+			var _c2 = !isVertDataRange ? i : dataRange.c2;
+			var f = this.worksheet.sName + "!" + new Asc.Range(_c1, _r1, _c2, _r2).getName();
 			sL.setF(f);
-			var _col = !isVert ? locationRange.c1 + i : locationRange.c1;
-			var _row = isVert ? locationRange.r1 + i : locationRange.r1;
+
+			var _col = !isVertLocationRange ? locationRange.c1 + i : locationRange.c1;
+			var _row = isVertLocationRange ? locationRange.r1 + i : locationRange.r1;
 			sL.sqRef = new Asc.Range(_col, _row, _col, _row);
 			sL.sqRef.setAbs(true, true, true, true);
 			newArrSparklines.push(sL);
@@ -5867,7 +5874,11 @@ function RangeDataManagerElem(bbox, data)
 	sparklineGroup.prototype.setSparklines = function (val, addToHistory) {
 		this.arrSparklines = val;
 		if (addToHistory) {
-			History.Add(new AscDFH.CChangesSparklinesChangeData(this, null, this.arrSparklines));
+			var cloneSparklines = [];
+			for (var i = 0; i < this.arrSparklines.length; i++) {
+				cloneSparklines.push(this.arrSparklines[i].clone());
+			}
+			History.Add(new AscDFH.CChangesSparklinesChangeData(this, null, cloneSparklines));
 		}
 	};
 	sparklineGroup.prototype.asc_getId = function () {
