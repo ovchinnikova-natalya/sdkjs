@@ -5645,9 +5645,9 @@ function RangeDataManagerElem(bbox, data)
 		// ToDDo не самая лучшая схема добавления на лист...
 		var api_sheet = Asc['editor'];
 		this.worksheet = api_sheet.wbModel.getWorksheetById(r.GetString2());
-		if (this.worksheet) {
+		/*if (this.worksheet) {
 			this.worksheet.insertSparklineGroup(this);
-		}
+		}*/
 	};
 	sparklineGroup.prototype.default = function () {
 		this.type = Asc.c_oAscSparklineType.Line;
@@ -5846,20 +5846,28 @@ function RangeDataManagerElem(bbox, data)
 		var unionRange = isUnion ? result.getUnion() : result;
 		return unionRange.isSingleRange() ? unionRange : result;
 	};
-	sparklineGroup.prototype.setSparklinesFromRange = function (dataRange, locationRange) {
+	sparklineGroup.prototype.setSparklinesFromRange = function (dataRange, locationRange, addToHistory) {
 		var isVert = locationRange.c1 === locationRange.c2;
 		var steps = !isVert ? locationRange.c2 - locationRange.c1 + 1 : locationRange.r2 - locationRange.r1 + 1;
-		var lengthDataRange = (dataRange.r2 - dataRange.r1) / steps;
+		var lengthDataRange = (dataRange.r2 - dataRange.r1 + 1) / steps;
 
+		var newArrSparklines = [];
 		for (var i = 0; i < steps; i++) {
 			var sL = new sparkline();
-			var f = this.worksheet.sName + "!" + new Asc.Range(dataRange.c1 + i * lengthDataRange, dataRange.r1, dataRange.c1 + (i + 1) * lengthDataRange, dataRange.r2).getName();
+			var f = this.worksheet.sName + "!" + new Asc.Range(dataRange.c1, dataRange.r1 + i * lengthDataRange, dataRange.c2, dataRange.r1 + ((i + 1) * lengthDataRange) - 1).getName();
 			sL.setF(f);
 			var _col = !isVert ? locationRange.c1 + i : locationRange.c1;
 			var _row = isVert ? locationRange.r1 + i : locationRange.r1;
 			sL.sqRef = new Asc.Range(_col, _row, _col, _row);
 			sL.sqRef.setAbs(true, true, true, true);
-			this.arrSparklines.push(sL);
+			newArrSparklines.push(sL);
+		}
+		this.setSparklines(newArrSparklines, addToHistory);
+	};
+	sparklineGroup.prototype.setSparklines = function (val, addToHistory) {
+		this.arrSparklines = val;
+		if (addToHistory) {
+			History.Add(new AscDFH.CChangesSparklinesChangeData(this, null, this.arrSparklines));
 		}
 	};
 	sparklineGroup.prototype.asc_getId = function () {

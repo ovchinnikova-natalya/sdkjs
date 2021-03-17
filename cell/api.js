@@ -3822,13 +3822,13 @@ var editor;
 			if (res) {
 				History.Create_NewPoint();
 				History.StartTransaction();
-				//ws.addSparklineGroups(modelSparkline);
+
 				var modelSparkline = new window['AscCommonExcel'].sparklineGroup(true);
 				modelSparkline.worksheet = ws;
 				modelSparkline.set(newSparkLine);
-				modelSparkline.setSparklinesFromRange(dataRange, locationRange);
-				//modelSparkline.generateSparklines();
-				ws.insertSparklineGroup(modelSparkline);
+				modelSparkline.setSparklinesFromRange(dataRange, locationRange, true);
+				ws.addSparklineGroups(modelSparkline);
+
 				History.EndTransaction();
 				t.wb._onWSSelectionChanged();
 				t.wb.getWorksheet().draw();
@@ -3836,7 +3836,7 @@ var editor;
 		};
 
 		if (!sDataRange || !sLocationRange) {
-			sDataRange = "a1:b3";
+			sDataRange = "a1:b6";
 			sLocationRange = "C1:C3";
 			//return Asc.c_oAscError.ID.DataRangeError;
 		}
@@ -3857,11 +3857,12 @@ var editor;
 			return Asc.c_oAscError.ID.LocationOrDataRangeError;
 		}
 
+		//чтобы добавить все данные в историю создаём ещё один sparklineGroup и заполняем его всеми необходимыми опциями
 		var ws = this.wbModel.getActiveWs();
-		var newSparkLine;
-
-		newSparkLine = ws.generateSparklineGroup(type);
+		var newSparkLine = new window['AscCommonExcel'].sparklineGroup();
 		newSparkLine.default();
+		newSparkLine.type = Asc.c_oAscSparklineType.Column/*type*/;
+
 
 		addSparkline(true);
 		return Asc.c_oAscError.ID.No;
