@@ -5873,14 +5873,22 @@ function RangeDataManagerElem(bbox, data)
 		}
 		this.setSparklines(newArrSparklines, addToHistory);
 	};
-	sparklineGroup.prototype.setSparklines = function (val, addToHistory) {
+	sparklineGroup.prototype.setSparklines = function (val, addToHistory, opt_addOldPr) {
+		var oldPr = null;
+		var i;
+		if (addToHistory && opt_addOldPr) {
+			oldPr = [];
+			for (i = 0; i < this.arrSparklines.length; i++) {
+				oldPr.push(this.arrSparklines[i].clone());
+			}
+		}
 		this.arrSparklines = val;
 		if (addToHistory) {
-			var cloneSparklines = [];
-			for (var i = 0; i < this.arrSparklines.length; i++) {
-				cloneSparklines.push(this.arrSparklines[i].clone());
+			var newPr = [];
+			for (i = 0; i < this.arrSparklines.length; i++) {
+				newPr.push(this.arrSparklines[i].clone());
 			}
-			History.Add(new AscDFH.CChangesSparklinesChangeData(this, null, cloneSparklines));
+			History.Add(new AscDFH.CChangesSparklinesChangeData(this, oldPr, newPr));
 		}
 	};
 	sparklineGroup.prototype.isValidDataRef = function (dataRange, locationRange) {

@@ -7093,7 +7093,10 @@
 
 					} else {
 						var cloneElem = _elem.clone();
-						var _isChange = cloneElem.sqRef.forShift(range, offset);
+						var _isChange = false;
+						if (range.isIntersectForShift(cloneElem.sqRef, offset)) {
+							_isChange = cloneElem.sqRef.forShift(range, offset);
+						}
 						if (_isChange) {
 							isChange = true;
 						}
@@ -7117,20 +7120,13 @@
 
 						aSparklines.push(cloneElem);
 					}
+					console.log(cloneElem.f);
 				}
 				if (isChange) {
-					val.arrSparklines = aSparklines;
-					History.Add(new AscDFH.CChangesSparklinesChangeData(val, val.arrSparklines, aSparklines));
+					val.setSparklines(aSparklines, true, true);
 				}
 			}
 		});
-		if (offset.row < 0 || offset.col < 0) {
-			for (var i = 0; i < this.aConditionalFormattingRules.length; ++i) {
-				if (this.aConditionalFormattingRules[i].containsIntoRange(range)) {
-					this.deleteCFRule(this.aConditionalFormattingRules[i].id, true);
-				}
-			}
-		}
 		this.setConditionalFormattingOffset(range, offset);
 	};
 	Worksheet.prototype.setSparklineGroupOffset = function (range, offset) {

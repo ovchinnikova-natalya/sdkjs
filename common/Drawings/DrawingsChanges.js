@@ -852,15 +852,15 @@
         this.Fill(this.OldPr);
     };
 
-	CChangesSparklinesChangeData.prototype.Redo = function(){
+	CChangesSparklinesChangeData.prototype.Redo = function () {
 		var wb = window["Asc"]["editor"].wb.model;
 		var t = this;
-		if (wb.bCollaborativeChanges) {
+		/*if (wb.bCollaborativeChanges) {
 			var collaborativeEditing = wb.oApi.collaborativeEditing;
 			var nSheetId = this.Class && this.Class.worksheet && this.Class.worksheet.Id;
-		    if (collaborativeEditing && nSheetId) {
-		        if (this.NewPr && this.NewPr.length) {
-                    for (var i = 0; i < this.NewPr.length; i++) {
+			if (collaborativeEditing && nSheetId) {
+				if (this.NewPr && this.NewPr.length) {
+					for (var i = 0; i < this.NewPr.length; i++) {
 						this.NewPr[i].sqRef.r1 = collaborativeEditing.getLockOtherRow2(nSheetId, this.NewPr[i].sqRef.r1);
 						this.NewPr[i].sqRef.c1 = collaborativeEditing.getLockOtherColumn2(nSheetId, this.NewPr[i].sqRef.c1);
 						this.NewPr[i].sqRef.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, this.NewPr[i].sqRef.r2);
@@ -874,10 +874,10 @@
 						AscCommonExcel.executeInR1C1Mode(false, function () {
 							t.NewPr[i].f = t.NewPr[0]._f.getName();
 						});
-                    }
-                }
+					}
+				}
 			}
-		}
+		}*/
 		this.Fill(this.NewPr);
 	};
 	/*CChangesSparklinesChangeData.prototype.applyCollaborative = function (nSheetId, collaborativeEditing) {
