@@ -852,9 +852,34 @@
         this.Fill(this.OldPr);
     };
 
-    CChangesSparklinesChangeData.prototype.Redo = function(){
-        this.Fill(this.NewPr);
-    };
+	CChangesSparklinesChangeData.prototype.Redo = function(){
+		var wb = window["Asc"]["editor"].wb.model;
+		if (wb.bCollaborativeChanges) {
+			var collaborativeEditing = wb.oApi.collaborativeEditing;
+			var nSheetId = this.Class && this.Class.worksheet && this.Class.worksheet.Id;
+		    if (collaborativeEditing && nSheetId) {
+		        if (this.NewPr && this.NewPr.length) {
+                    for (var i = 0; i < this.NewPr.length; i++) {
+						this.NewPr[i].sqRef.r1 = collaborativeEditing.getLockOtherRow2(nSheetId, this.NewPr[i].sqRef.r1);
+						this.NewPr[i].sqRef.c1 = collaborativeEditing.getLockOtherColumn2(nSheetId, this.NewPr[i].sqRef.c1);
+						this.NewPr[i].sqRef.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, this.NewPr[i].sqRef.r2);
+						this.NewPr[i].sqRef.c2 = collaborativeEditing.getLockOtherColumn2(nSheetId, this.NewPr[i].sqRef.c2);
+
+						this.NewPr[i]._f.r1 = collaborativeEditing.getLockOtherRow2(nSheetId, this.NewPr[i]._f.r1);
+						this.NewPr[i]._f.c1 = collaborativeEditing.getLockOtherColumn2(nSheetId, this.NewPr[i]._f.c1);
+						this.NewPr[i]._f.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, this.NewPr[i]._f.r2);
+						this.NewPr[i]._f.c2 = collaborativeEditing.getLockOtherColumn2(nSheetId, this.NewPr[i]._f.c2);
+
+						this.NewPr[i].f = this.NewPr[0]._f.getName();
+                    }
+                }
+			}
+		}
+		this.Fill(this.NewPr);
+	};
+	/*CChangesSparklinesChangeData.prototype.applyCollaborative = function (nSheetId, collaborativeEditing) {
+		var test = 1;
+	};*/
     CChangesSparklinesChangeData.prototype.Load = function(){
         this.Redo();
         this.RefreshRecalcData();

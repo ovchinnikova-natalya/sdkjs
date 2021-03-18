@@ -5644,8 +5644,8 @@
 	WorksheetView.prototype.addSparklineGroup = function (sDataRange, sLocationRange) {
 		var t = this;
 		if (!sDataRange || !sLocationRange) {
-			sDataRange = "b2:g3";
-			sLocationRange = "C5:C10";
+			sDataRange = "a1:c2";
+			sLocationRange = "e4:e5";
 			//return Asc.c_oAscError.ID.DataRangeError;
 		}
 
@@ -5685,9 +5685,29 @@
 			return error;
 		}
 	};
+	WorksheetView.prototype.setSparklineGroup = function (sDataRange, sLocationRange) {
 
+		var addSparkline = function (res) {
+			if (res) {
+				History.Create_NewPoint();
+				History.StartTransaction();
 
-    // mouseX - это разница стартовых координат от мыши при нажатии и границы
+				var modelSparkline = new AscCommonExcel.sparklineGroup(true);
+				modelSparkline.worksheet = ws;
+				modelSparkline.set(newSparkLine);
+				modelSparkline.setSparklinesFromRange(dataRange, locationRange, true);
+				ws.addSparklineGroups(modelSparkline);
+
+				History.EndTransaction();
+				t.workbook._onWSSelectionChanged();
+				t.workbook.getWorksheet().draw();
+			}
+		};
+
+		this._isLockedCells(locationRange, /*subType*/null, addSparkline);
+	};
+
+	// mouseX - это разница стартовых координат от мыши при нажатии и границы
     WorksheetView.prototype.drawColumnGuides = function ( col, x, y, mouseX ) {
         // Учитываем координаты точки, где мы начали изменение размера
         x += mouseX;
