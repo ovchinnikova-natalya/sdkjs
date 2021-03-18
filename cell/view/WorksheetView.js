@@ -5657,6 +5657,8 @@
 				History.Create_NewPoint();
 				History.StartTransaction();
 
+				ws.removeSparklines(locationRange);
+
 				var modelSparkline = new AscCommonExcel.sparklineGroup(true);
 				modelSparkline.worksheet = ws;
 				modelSparkline.set(newSparkLine);

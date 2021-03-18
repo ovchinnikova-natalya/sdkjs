@@ -7082,59 +7082,52 @@
 		}
 	};
 	Worksheet.prototype.updateSparklineGroupOffset = function (range, offset) {
+		if ((offset.row < 0 || offset.col < 0)) {
+			this.removeSparklines(range);
+		}
+		this.setSparklinesOffset(range, offset);
+	};
+	Worksheet.prototype.setSparklinesOffset = function (range, offset) {
 		this.aSparklineGroups.forEach(function(val) {
 			if (val) {
 				var aSparklines = [];
 				var isChange = false;
 				for (var i = 0; i < val.arrSparklines.length; i++) {
 					var _elem = val.arrSparklines[i];
-					if ((offset.row < 0 || offset.col < 0) && _elem && range.containsRange(_elem.sqRef)) {
-						//в данном случае удаляем данный sparkline
 
+					var cloneElem = _elem.clone();
+					var _isChange = false;
+					if (range.isIntersectForShift(cloneElem.sqRef, offset)) {
+						_isChange = cloneElem.sqRef.forShift(range, offset);
+					}
+					if (_isChange) {
+						isChange = true;
+					}
+
+					//необходимо ещё сдвинуть _f
+					if ((offset.row < 0 || offset.col < 0) && _elem && range.containsRange(_elem._f)) {
+						_elem.f = null;
+						_elem._f = null;
 					} else {
-						var cloneElem = _elem.clone();
-						var _isChange = false;
-						if (range.isIntersectForShift(cloneElem.sqRef, offset)) {
-							_isChange = cloneElem.sqRef.forShift(range, offset);
+						_isChange = false;
+						if (range.isIntersectForShift(cloneElem._f, offset)) {
+							_isChange = cloneElem._f.forShift(range, offset);
 						}
 						if (_isChange) {
 							isChange = true;
+							AscCommonExcel.executeInR1C1Mode(false, function () {
+								cloneElem.f = cloneElem._f.getName();
+							});
 						}
-
-						//необходимо ещё сдвинуть _f
-						if ((offset.row < 0 || offset.col < 0) && _elem && range.containsRange(_elem._f)) {
-							_elem.f = null;
-							_elem._f = null;
-						} else {
-							_isChange = false;
-							if (range.isIntersectForShift(cloneElem._f, offset)) {
-								_isChange = cloneElem._f.forShift(range, offset);
-							}
-							if (_isChange) {
-								isChange = true;
-								AscCommonExcel.executeInR1C1Mode(false, function () {
-									cloneElem.f = cloneElem._f.getName();
-								});
-							}
-						}
-
-						aSparklines.push(cloneElem);
 					}
-					console.log(cloneElem.f);
+
+					aSparklines.push(cloneElem);
 				}
 				if (isChange) {
 					val.setSparklines(aSparklines, true, true);
 				}
 			}
 		});
-		this.setConditionalFormattingOffset(range, offset);
-	};
-	Worksheet.prototype.setSparklineGroupOffset = function (range, offset) {
-		var oRule;
-		for (var i = 0; i < this.aConditionalFormattingRules.length; ++i) {
-			oRule = this.aConditionalFormattingRules[i];
-			oRule.setOffset(offset, range, this, true);
-		}
 	};
 	Worksheet.prototype.moveSparklineGroup = function (oBBoxFrom, oBBoxTo, copyRange, offset, wsTo, wsFrom) {
 		var t = this;
