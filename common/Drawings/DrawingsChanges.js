@@ -854,6 +854,7 @@
 
 	CChangesSparklinesChangeData.prototype.Redo = function(){
 		var wb = window["Asc"]["editor"].wb.model;
+		var t = this;
 		if (wb.bCollaborativeChanges) {
 			var collaborativeEditing = wb.oApi.collaborativeEditing;
 			var nSheetId = this.Class && this.Class.worksheet && this.Class.worksheet.Id;
@@ -870,7 +871,9 @@
 						this.NewPr[i]._f.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, this.NewPr[i]._f.r2);
 						this.NewPr[i]._f.c2 = collaborativeEditing.getLockOtherColumn2(nSheetId, this.NewPr[i]._f.c2);
 
-						this.NewPr[i].f = this.NewPr[0]._f.getName();
+						AscCommonExcel.executeInR1C1Mode(false, function () {
+							t.NewPr[i].f = t.NewPr[0]._f.getName();
+						});
                     }
                 }
 			}

@@ -7085,19 +7085,43 @@
 		this.aSparklineGroups.forEach(function(val) {
 			if (val) {
 				var aSparklines = [];
+				var isChange = false;
 				for (var i = 0; i < val.arrSparklines.length; i++) {
 					var _elem = val.arrSparklines[i];
 					if ((offset.row < 0 || offset.col < 0) && _elem && range.containsRange(_elem.sqRef)) {
 						//в данном случае удаляем данный sparkline
+
 					} else {
 						var cloneElem = _elem.clone();
-						cloneElem.sqRef.forShift(range, offset);
+						var _isChange = cloneElem.sqRef.forShift(range, offset);
+						if (_isChange) {
+							isChange = true;
+						}
 
 						//необходимо ещё сдвинуть _f
-						aSparklines.push(_elem);
+						if ((offset.row < 0 || offset.col < 0) && _elem && range.containsRange(_elem._f)) {
+							_elem.f = null;
+							_elem._f = null;
+						} else {
+							_isChange = false;
+							if (range.isIntersectForShift(cloneElem._f, offset)) {
+								_isChange = cloneElem._f.forShift(range, offset);
+							}
+							if (_isChange) {
+								isChange = true;
+								AscCommonExcel.executeInR1C1Mode(false, function () {
+									cloneElem.f = cloneElem._f.getName();
+								});
+							}
+						}
+
+						aSparklines.push(cloneElem);
 					}
 				}
-
+				if (isChange) {
+					val.arrSparklines = aSparklines;
+					History.Add(new AscDFH.CChangesSparklinesChangeData(val, val.arrSparklines, aSparklines));
+				}
 			}
 		});
 		if (offset.row < 0 || offset.col < 0) {
