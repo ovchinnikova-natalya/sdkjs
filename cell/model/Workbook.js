@@ -5060,14 +5060,13 @@
 		var redrawTablesArr = this.autoFilters.insertRows("delCell", oActualRange, c_oAscDeleteOptions.DeleteRows);
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oActualRange, offset);
+			this.updateConditionalFormattingOffset(oActualRange, offset);
+			this.updateSparklineGroupOffset(oActualRange, offset);
 		}
 		if (false == this.workbook.bUndoChanges && (false == this.workbook.bRedoChanges || this.workbook.bCollaborativeChanges)) {
 			History.LocalChange = true;
 			this.updateSortStateOffset(oActualRange, offset);
 			History.LocalChange = false;
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
-			this.updateConditionalFormattingOffset(oActualRange, offset);
 		}
 
 		var collapsedInfo = null, lastRowIndex;
@@ -5156,14 +5155,13 @@
 		var redrawTablesArr = this.autoFilters.insertRows("insCell", oActualRange, c_oAscInsertOptions.InsertColumns);
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oActualRange, offset);
+			this.updateConditionalFormattingOffset(oActualRange, offset);
+			this.updateSparklineGroupOffset(oActualRange, offset);
 		}
 		if (false == this.workbook.bUndoChanges && (false == this.workbook.bRedoChanges || this.workbook.bCollaborativeChanges)) {
 			History.LocalChange = true;
 			this.updateSortStateOffset(oActualRange, offset);
 			History.LocalChange = false;
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
-			this.updateConditionalFormattingOffset(oActualRange, offset);
 		}
 
 		this._updateFormulasParents(index, 0, gc_nMaxRow0, gc_nMaxCol0, oActualRange, offset, renameRes.shiftedShared);
@@ -5233,14 +5231,13 @@
 		var redrawTablesArr = this.autoFilters.insertColumn(oActualRange, nDif);
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oActualRange, offset);
+			this.updateConditionalFormattingOffset(oActualRange, offset);
+			this.updateSparklineGroupOffset(oActualRange, offset);
 		}
 		if (false == this.workbook.bUndoChanges && (false == this.workbook.bRedoChanges || this.workbook.bCollaborativeChanges)) {
 			History.LocalChange = true;
 			this.updateSortStateOffset(oActualRange, offset);
 			History.LocalChange = false;
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
-			this.updateConditionalFormattingOffset(oActualRange, offset);
 		}
 
 		var collapsedInfo = null, lastRowIndex;
@@ -5307,14 +5304,13 @@
 		var redrawTablesArr = this.autoFilters.insertColumn(oActualRange, count);
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oActualRange, offset);
+			this.updateConditionalFormattingOffset(oActualRange, offset);
+			this.updateSparklineGroupOffset(oActualRange, offset);
 		}
 		if (false == this.workbook.bUndoChanges && (false == this.workbook.bRedoChanges || this.workbook.bCollaborativeChanges)) {
 			History.LocalChange = true;
 			this.updateSortStateOffset(oActualRange, offset);
 			History.LocalChange = false;
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
-			this.updateConditionalFormattingOffset(oActualRange, offset);
 		}
 
 		this._updateFormulasParents(0, index, gc_nMaxRow0, gc_nMaxCol0, oActualRange, offset, renameRes.shiftedShared);
@@ -6620,9 +6616,8 @@
 		}
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oBBox, offset);
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updateConditionalFormattingOffset(oBBox, offset);
+			this.updateSparklineGroupOffset(oBBox, offset);
 		}
 
 		this.getRange3(oBBox.r1, oBBox.c1, oBBox.r2, oBBox.c2)._foreachNoEmpty(function(cell){
@@ -6662,9 +6657,8 @@
 		}
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oBBox, offset);
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updateConditionalFormattingOffset(oBBox, offset);
+			this.updateSparklineGroupOffset(oBBox, offset);
 		}
 
 		this.getRange3(oBBox.r1, oBBox.c1, oBBox.r2, oBBox.c2)._foreachNoEmpty(function(cell){
@@ -6700,9 +6694,8 @@
 		}
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oBBox, offset);
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updateConditionalFormattingOffset(oBBox, offset);
+			this.updateSparklineGroupOffset(oBBox, offset);
 		}
 
 		this._updateFormulasParents(oActualRange.r1, oActualRange.c1, oActualRange.r2, oActualRange.c2, oBBox, offset, renameRes.shiftedShared);
@@ -6760,9 +6753,8 @@
 		}
 		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updatePivotOffset(oBBox, offset);
-		}
-		if (false == this.workbook.bUndoChanges && false == this.workbook.bRedoChanges) {
 			this.updateConditionalFormattingOffset(oBBox, offset);
+			this.updateSparklineGroupOffset(oBBox, offset);
 		}
 
 		this._updateFormulasParents(oActualRange.r1, oActualRange.c1, oActualRange.r2, oActualRange.c2, oBBox, offset, renameRes.shiftedShared);
@@ -7087,6 +7079,102 @@
 				this.aSparklineGroups.splice(i, 1);
 				break;
 			}
+		}
+	};
+	Worksheet.prototype.updateSparklineGroupOffset = function (range, offset) {
+		this.aSparklineGroups.forEach(function(val) {
+			if (val) {
+				var aSparklines = [];
+				for (var i = 0; i < val.arrSparklines.length; i++) {
+					var _elem = val.arrSparklines[i];
+					if ((offset.row < 0 || offset.col < 0) && _elem && range.containsRange(_elem.sqRef)) {
+						//в данном случае удаляем данный sparkline
+					} else {
+						var cloneElem = _elem.clone();
+						cloneElem.sqRef.forShift(range, offset);
+
+						//необходимо ещё сдвинуть _f
+						aSparklines.push(_elem);
+					}
+				}
+
+			}
+		});
+		if (offset.row < 0 || offset.col < 0) {
+			for (var i = 0; i < this.aConditionalFormattingRules.length; ++i) {
+				if (this.aConditionalFormattingRules[i].containsIntoRange(range)) {
+					this.deleteCFRule(this.aConditionalFormattingRules[i].id, true);
+				}
+			}
+		}
+		this.setConditionalFormattingOffset(range, offset);
+	};
+	Worksheet.prototype.setSparklineGroupOffset = function (range, offset) {
+		var oRule;
+		for (var i = 0; i < this.aConditionalFormattingRules.length; ++i) {
+			oRule = this.aConditionalFormattingRules[i];
+			oRule.setOffset(offset, range, this, true);
+		}
+	};
+	Worksheet.prototype.moveSparklineGroup = function (oBBoxFrom, oBBoxTo, copyRange, offset, wsTo, wsFrom) {
+		var t = this;
+		if (!wsTo) {
+			wsTo = this;
+		}
+		if (false === this.workbook.bUndoChanges && false === this.workbook.bRedoChanges) {
+			//чистим ту область, куда переносим
+			wsTo.clearConditionalFormattingRulesByRanges([oBBoxTo]);
+
+			if (!wsFrom) {
+				wsFrom = this;
+			}
+			wsFrom.forEachConditionalFormattingRules(function (_rule) {
+				//если клонируем - то добавляем новое правило со смещенным диапазоном пересечения
+				//если нет + если в пределах одного листа - меняем диапазона у текущего правила
+				//если на другой лист - меняем диапазон у текущего правила + создаём новое со смещенным диапазоном пересечения
+
+				var isChanged = null;
+				var ruleRanges = _rule.ranges;
+				var constantPart, movePart;
+				var _moveRanges = [];
+				var _constantRanges = [];
+				for (var i = 0; i < ruleRanges.length; i++) {
+					movePart = ruleRanges[i].intersection(oBBoxFrom);
+					if (movePart) {
+						if (!copyRange) {
+							constantPart = oBBoxFrom.difference(ruleRanges[i]);
+							_constantRanges = _constantRanges.concat(constantPart);
+						}
+						movePart.setOffset(offset);
+						_moveRanges.push(movePart);
+						isChanged = true;
+					} else if (!copyRange) {
+						_constantRanges.push(ruleRanges[i]);
+					}
+				}
+				if (isChanged) {
+					//в случае клонирования фрагмента - создаём новое правило
+					var _newRule;
+					if (copyRange) {
+						_newRule = _rule.clone();
+						_newRule.ranges = _moveRanges;
+						wsTo.addCFRule(_newRule, true);
+					} else {
+						if (t !== wsTo) {
+							if (_moveRanges.length) {
+								_newRule = _rule.clone();
+								_newRule.ranges = _moveRanges;
+								wsTo.addCFRule(_newRule, true);
+							}
+							if (_constantRanges.length) {
+								_rule.setLocation(_constantRanges, t, true);
+							}
+						} else {
+							_rule.setLocation(_constantRanges.concat(_moveRanges), t, true);
+						}
+					}
+				}
+			});
 		}
 	};
 	Worksheet.prototype.getCwf = function() {
