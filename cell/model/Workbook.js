@@ -7144,12 +7144,14 @@
 			wsFrom.aSparklineGroups.forEach(function (val) {
 				if (val) {
 					var aSparklines = [];
+					var aSparkLinesToSheet = [];
 					var isChange = false;
 					for (var i = 0; i < val.arrSparklines.length; i++) {
 						var _elem = val.arrSparklines[i];
 
 						var cloneElem = _elem.clone();
 						var _isChange = false;
+						var moveOnNewSheet = false;
 
 						if (wsTo === wsFrom) {
 							if (oBBoxFrom.containsRange(cloneElem.sqRef)) {
@@ -7162,8 +7164,8 @@
 						} else {
 							if (oBBoxFrom.containsRange(cloneElem.sqRef)) {
 								//тут необходимо добавить новый спакрлайн на новом листе
-
-								continue;
+								moveOnNewSheet = true;
+								aSparkLinesToSheet.push(cloneElem);
 							}
 						}
 
@@ -7179,13 +7181,18 @@
 							isChange = true;
 						}
 
-						aSparklines.push(cloneElem);
+						if (!moveOnNewSheet) {
+							aSparklines.push(cloneElem);
+						}
 					}
 					if (isChange) {
 						//если, допустим, перенесли все спарклайны на другой лист, то необходимо удалить группы здесь и добавить новую группы
+						if (aSparklines.length !== 0) {
+							val.setSparklines(aSparklines, true, true);
+						}
+						if (aSparkLinesToSheet.length !== 0) {
 
-
-						val.setSparklines(aSparklines, true, true);
+						}
 					}
 				}
 			});
