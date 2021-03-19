@@ -6585,6 +6585,8 @@
 		this._moveMergedAndHyperlinks(prepared, oBBoxFrom, oBBoxTo, copyRange, wsTo, offset);
 		this._moveDataValidation(oBBoxFrom, oBBoxTo, copyRange, offset, wsTo);
 		this.moveConditionalFormatting(oBBoxFrom, oBBoxTo, copyRange, offset, wsTo);
+		this.moveSparklineGroup(oBBoxFrom, oBBoxTo, copyRange, offset, wsTo);
+
 
 		if(true == this.workbook.bUndoChanges || true == this.workbook.bRedoChanges) {
 			wsTo.autoFilters.unmergeTablesAfterMove(oBBoxTo);
@@ -7134,57 +7136,44 @@
 		if (!wsTo) {
 			wsTo = this;
 		}
-		if (false === this.workbook.bUndoChanges && false === this.workbook.bRedoChanges) {
-			//чистим ту область, куда переносим
-			wsTo.clearConditionalFormattingRulesByRanges([oBBoxTo]);
-
+		if (false === this.workbook.bUndoChanges && false === this.workbook.bRedoChanges && !copyRange) {
 			if (!wsFrom) {
 				wsFrom = this;
 			}
-			wsFrom.forEachConditionalFormattingRules(function (_rule) {
-				//если клонируем - то добавляем новое правило со смещенным диапазоном пересечения
-				//если нет + если в пределах одного листа - меняем диапазона у текущего правила
-				//если на другой лист - меняем диапазон у текущего правила + создаём новое со смещенным диапазоном пересечения
 
-				var isChanged = null;
-				var ruleRanges = _rule.ranges;
-				var constantPart, movePart;
-				var _moveRanges = [];
-				var _constantRanges = [];
-				for (var i = 0; i < ruleRanges.length; i++) {
-					movePart = ruleRanges[i].intersection(oBBoxFrom);
-					if (movePart) {
-						if (!copyRange) {
-							constantPart = oBBoxFrom.difference(ruleRanges[i]);
-							_constantRanges = _constantRanges.concat(constantPart);
+			wsFrom.aSparklineGroups.forEach(function(val) {
+				if (val) {
+					var aSparklines = [];
+					var isChange = false;
+					for (var i = 0; i < val.arrSparklines.length; i++) {
+						var _elem = val.arrSparklines[i];
+
+						var cloneElem = _elem.clone();
+						var _isChange = false;
+						if (oBBoxFrom.containsRange(cloneElem.sqRef)) {
+							cloneElem.sqRef.setOffset(offset);
+							_isChange = true;
 						}
-						movePart.setOffset(offset);
-						_moveRanges.push(movePart);
-						isChanged = true;
-					} else if (!copyRange) {
-						_constantRanges.push(ruleRanges[i]);
+						if (_isChange) {
+							isChange = true;
+						}
+
+						//необходимо ещё сдвинуть _f
+						if (_elem && oBBoxFrom.containsRange(_elem._f)) {
+							_isChange = false;
+							if (range.isIntersectForShift(cloneElem._f, offset)) {
+								cloneElem._f.setOffset(offset);
+								AscCommonExcel.executeInR1C1Mode(false, function () {
+									cloneElem.f = cloneElem._f.getName();
+								});
+								isChange = true;
+							}
+						}
+
+						aSparklines.push(cloneElem);
 					}
-				}
-				if (isChanged) {
-					//в случае клонирования фрагмента - создаём новое правило
-					var _newRule;
-					if (copyRange) {
-						_newRule = _rule.clone();
-						_newRule.ranges = _moveRanges;
-						wsTo.addCFRule(_newRule, true);
-					} else {
-						if (t !== wsTo) {
-							if (_moveRanges.length) {
-								_newRule = _rule.clone();
-								_newRule.ranges = _moveRanges;
-								wsTo.addCFRule(_newRule, true);
-							}
-							if (_constantRanges.length) {
-								_rule.setLocation(_constantRanges, t, true);
-							}
-						} else {
-							_rule.setLocation(_constantRanges.concat(_moveRanges), t, true);
-						}
+					if (isChange) {
+						val.setSparklines(aSparklines, true, true);
 					}
 				}
 			});
