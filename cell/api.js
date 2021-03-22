@@ -493,56 +493,60 @@ var editor;
     }
   };
 
-  spreadsheet_api.prototype.asc_TextFromFileOrUrl = function(options, callback, url, _getParsedText) {
-    if (this.canEdit()) {
-      if (_getParsedText) {
-        var text = AscCommon.g_specialPasteHelper.textFromFileOrUrl;
-        if(!text) {
-          //error
-          //no data was selected to parse
-          this.sendEvent('asc_onError', c_oAscError.ID.NoDataToParse, c_oAscError.Level.NoCritical);
-          callback(false);
-          return;
-        }
-        callback(AscCommon.parseText(text, options, true));
-      } else {
-        if (url) {
-          this._getTextFromUrl(url, options, callback);
-        } else {
-          this._getTextFromFile(options, callback);
-        }
-      }
-    }
-  };
+	spreadsheet_api.prototype.asc_TextFromFileOrUrl = function (options, callback, url, _getParsedText) {
+		if (this.canEdit()) {
+			if (_getParsedText) {
+				var text = AscCommon.g_specialPasteHelper.textFromFileOrUrl;
+				if (!text) {
+					//error
+					//no data was selected to parse
+					this.sendEvent('asc_onError', c_oAscError.ID.NoDataToParse, c_oAscError.Level.NoCritical);
+					callback(false);
+					return;
+				}
+				callback(AscCommon.parseText(text, options, true));
+			} else {
+				if (url) {
+					this._getTextFromUrl(url, options, callback);
+				} else {
+					this._getTextFromFile(options, callback);
+				}
+			}
+		}
+	};
 
-  spreadsheet_api.prototype._getTextFromUrl = function(url, options, callback) {
-    if (this.canEdit()) {
-      var document = {url: url, format: "TXT"};
-      this.insertDocumentUrlsData = {
-        imageMap: null, documents: [document], convertCallback: function (_api, url) {
-          _api.insertDocumentUrlsData.imageMap = url;
-          if (!url['output.txt']) {
-            _api.endInsertDocumentUrls();
-            _api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl,
-                Asc.c_oAscError.Level.NoCritical);
-            return;
-          }
-          AscCommon.loadFileContent(url['output.txt'], function (httpRequest) {
-            if (httpRequest && httpRequest.responseText) {
-              AscCommon.g_specialPasteHelper.textFromFileOrUrl = httpRequest.responseText;
-              callback(AscCommon.parseText(httpRequest.responseText, options, true));
-              _api.endInsertDocumentUrls();
-            }
-          }, "text");
-        }, endCallback: function (_api) {
-        }
-      };
+	spreadsheet_api.prototype._getTextFromUrl = function (url, options, callback) {
+		if (this.canEdit()) {
+			var document = {url: url, format: "TXT"};
+			this.insertDocumentUrlsData = {
+				imageMap: null, documents: [document], convertCallback: function (_api, url) {
+					_api.insertDocumentUrlsData.imageMap = url;
+					if (!url['output.txt']) {
+						_api.endInsertDocumentUrls();
+						_api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl, Asc.c_oAscError.Level.NoCritical);
+						return;
+					}
+					AscCommon.loadFileContent(url['output.txt'], function (httpRequest) {
+						if (httpRequest && httpRequest.responseText) {
+							AscCommon.g_specialPasteHelper.textFromFileOrUrl = httpRequest.responseText;
+							var cp = {
+								'codepage': AscCommon.c_oAscCodePageUtf8,
+								"delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
+								'encodings': AscCommon.getEncodingParams()
+							};
+							callback(AscCommon.parseText(httpRequest.responseText, options, true), new AscCommon.asc_CAdvancedOptions(cp));
+							_api.endInsertDocumentUrls();
+						}
+					}, "text");
+				}, endCallback: function (_api) {
+				}
+			};
 
-      var _options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
-      _options.isNaturalDownload = true;
-      this.asc_DownloadAs(_options);
-    }
-  };
+			var _options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
+			_options.isNaturalDownload = true;
+			this.asc_DownloadAs(_options);
+		}
+	};
 
 	spreadsheet_api.prototype._getTextFromFile = function (options, callback) {
 		var t = this;
@@ -555,7 +559,11 @@ var editor;
 			var reader = new FileReader();
 			reader.onload = function () {
 				AscCommon.g_specialPasteHelper.textFromFileOrUrl = reader.result;
-				callback(AscCommon.parseText(reader.result, options, true));
+				var cp = {
+					'codepage': AscCommon.c_oAscCodePageUtf8, "delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
+					'encodings': AscCommon.getEncodingParams()
+				};
+				callback(AscCommon.parseText(reader.result, options, true), new AscCommon.asc_CAdvancedOptions(cp));
 				//t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
 			};
 
