@@ -585,6 +585,44 @@ var editor;
 		});
 	};
 
+	spreadsheet_api.prototype._getTextFromFile2 = function (options, callback) {
+		var t = this;
+
+		AscCommon.ShowTextFileDialog(function (error, files) {
+			if (Asc.c_oAscError.ID.No !== error) {
+				t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+				return;
+			}
+			var reader = new FileReader();
+			reader.onload = function () {
+				AscCommon.g_specialPasteHelper.textFromFileOrUrl = reader.result;
+				var cp = {
+					'codepage': AscCommon.c_oAscCodePageUtf8, "delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
+					'encodings': AscCommon.getEncodingParams()
+				};
+				t.asc_decodeBuffer(reader.result, options, callback);
+				//callback(AscCommon.parseText(reader.result, options, true), new AscCommon.asc_CAdvancedOptions(cp));
+				//t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
+			};
+
+			reader.onerror = function () {
+				t.sendEvent("asc_onError", Asc.c_oAscError.ID.Unknown, Asc.c_oAscError.Level.NoCritical);
+			};
+
+			var encoding = "UTF-8";
+			var codePage = options.asc_getCodePage();
+			var encodingsLen = AscCommon.c_oAscEncodings.length;
+			for (var i = 0; i < encodingsLen; ++i) {
+				if (AscCommon.c_oAscEncodings[i][0] == codePage) {
+					encoding = AscCommon.c_oAscEncodings[i][2];
+					break;
+				}
+			}
+
+			reader.readAsArrayBuffer(files[0], encoding);
+		});
+	};
+
 	spreadsheet_api.prototype.asc_getTextFromFileOrUrl = function () {
 		return AscCommon.g_specialPasteHelper.textFromFileOrUrl;
 	};
