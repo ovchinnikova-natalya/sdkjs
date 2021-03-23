@@ -515,76 +515,6 @@ var editor;
 		}
 	};
 
-	spreadsheet_api.prototype._getTextFromUrl = function (url, options, callback) {
-		if (this.canEdit()) {
-			var document = {url: url, format: "TXT"};
-			this.insertDocumentUrlsData = {
-				imageMap: null, documents: [document], convertCallback: function (_api, url) {
-					_api.insertDocumentUrlsData.imageMap = url;
-					if (!url['output.txt']) {
-						_api.endInsertDocumentUrls();
-						_api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl, Asc.c_oAscError.Level.NoCritical);
-						return;
-					}
-					AscCommon.loadFileContent(url['output.txt'], function (httpRequest) {
-						if (httpRequest && httpRequest.responseText) {
-							AscCommon.g_specialPasteHelper.textFromFileOrUrl = httpRequest.responseText;
-							var cp = {
-								'codepage': AscCommon.c_oAscCodePageUtf8,
-								"delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
-								'encodings': AscCommon.getEncodingParams()
-							};
-							callback(AscCommon.parseText(httpRequest.responseText, options, true), new AscCommon.asc_CAdvancedOptions(cp));
-							_api.endInsertDocumentUrls();
-						}
-					}, "text");
-				}, endCallback: function (_api) {
-				}
-			};
-
-			var _options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
-			_options.isNaturalDownload = true;
-			this.asc_DownloadAs(_options);
-		}
-	};
-
-	spreadsheet_api.prototype._getTextFromFile = function (options, callback) {
-		var t = this;
-
-		AscCommon.ShowTextFileDialog(function (error, files) {
-			if (Asc.c_oAscError.ID.No !== error) {
-				t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-				return;
-			}
-			var reader = new FileReader();
-			reader.onload = function () {
-				AscCommon.g_specialPasteHelper.textFromFileOrUrl = reader.result;
-				var cp = {
-					'codepage': AscCommon.c_oAscCodePageUtf8, "delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
-					'encodings': AscCommon.getEncodingParams()
-				};
-				callback(AscCommon.parseText(reader.result, options, true), new AscCommon.asc_CAdvancedOptions(cp));
-				//t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
-			};
-
-			reader.onerror = function () {
-				t.sendEvent("asc_onError", Asc.c_oAscError.ID.Unknown, Asc.c_oAscError.Level.NoCritical);
-			};
-
-			var encoding = "UTF-8";
-			var codePage = options.asc_getCodePage();
-			var encodingsLen = AscCommon.c_oAscEncodings.length;
-			for (var i = 0; i < encodingsLen; ++i) {
-				if (AscCommon.c_oAscEncodings[i][0] == codePage) {
-					encoding = AscCommon.c_oAscEncodings[i][2];
-					break;
-				}
-			}
-
-			reader.readAsText(files[0], encoding);
-		});
-	};
-
 	spreadsheet_api.prototype._getTextFromUrl2 = function (url, options, callback) {
 		if (this.canEdit()) {
 			var document = {url: url, format: "TXT"};
@@ -618,7 +548,50 @@ var editor;
 		}
 	};
 
-	spreadsheet_api.prototype._getTextFromFile2 = function (options, callback) {
+	spreadsheet_api.prototype._getTextFromUrl = function (url, options, callback) {
+		if (this.canEdit()) {
+			var document = {url: url, format: "TXT"};
+			this.insertDocumentUrlsData = {
+				imageMap: null, documents: [document], convertCallback: function (_api, url) {
+					_api.insertDocumentUrlsData.imageMap = url;
+					if (!url['output.txt']) {
+						_api.endInsertDocumentUrls();
+						_api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl, Asc.c_oAscError.Level.NoCritical);
+						return;
+					}
+
+					if (typeof Blob !== 'undefined' && typeof FileReader !== 'undefined') {
+						AscCommon.getJSZipUtils().getBinaryContent(url['output.txt'], function (err, data) {
+							var cp = {
+								'codepage': AscCommon.c_oAscCodePageUtf8, "delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
+								'encodings': AscCommon.getEncodingParams()
+							};
+
+							if (err) {
+								t.handlers.trigger("asc_onError", c_oAscError.ID.Unknown, c_oAscError.Level.Critical);
+							} else {
+								var dataUint = new Uint8Array(data);
+								var bom = AscCommon.getEncodingByBOM(dataUint);
+								if (AscCommon.c_oAscCodePageNone !== bom.encoding) {
+									cp['codepage'] = bom.encoding;
+									data = dataUint.subarray(bom.size);
+								}
+								cp['data'] = data;
+								callback(new AscCommon.asc_CAdvancedOptions(cp));
+							}
+						});
+					}
+				}, endCallback: function (_api) {
+				}
+			};
+
+			var _options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
+			_options.isNaturalDownload = true;
+			this.asc_DownloadAs(_options);
+		}
+	};
+
+	spreadsheet_api.prototype._getTextFromFile = function (options, callback) {
 		var t = this;
 
 		AscCommon.ShowTextFileDialog(function (error, files) {
@@ -626,14 +599,16 @@ var editor;
 				t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
 				return;
 			}
+
 			var reader = new FileReader();
 			reader.onload = function () {
-				AscCommon.g_specialPasteHelper.textFromFileOrUrl = reader.result;
+				//AscCommon.g_specialPasteHelper.textFromFileOrUrl = reader.result;
 				var cp = {
 					'codepage': AscCommon.c_oAscCodePageUtf8, "delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
-					'encodings': AscCommon.getEncodingParams()
+					'encodings': AscCommon.getEncodingParams(),
+					'data': reader.result
 				};
-				t.asc_decodeBuffer(reader.result, options, callback);
+				callback(new AscCommon.asc_CAdvancedOptions(cp));
 			};
 
 			reader.onerror = function () {
