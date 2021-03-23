@@ -585,6 +585,39 @@ var editor;
 		});
 	};
 
+	spreadsheet_api.prototype._getTextFromUrl2 = function (url, options, callback) {
+		if (this.canEdit()) {
+			var document = {url: url, format: "TXT"};
+			this.insertDocumentUrlsData = {
+				imageMap: null, documents: [document], convertCallback: function (_api, url) {
+					_api.insertDocumentUrlsData.imageMap = url;
+					if (!url['output.txt']) {
+						_api.endInsertDocumentUrls();
+						_api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl, Asc.c_oAscError.Level.NoCritical);
+						return;
+					}
+					AscCommon.loadFileContent(url['output.txt'], function (httpRequest) {
+						if (httpRequest && httpRequest.responseText) {
+							AscCommon.g_specialPasteHelper.textFromFileOrUrl = httpRequest.responseText;
+							var cp = {
+								'codepage': AscCommon.c_oAscCodePageUtf8,
+								"delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
+								'encodings': AscCommon.getEncodingParams()
+							};
+							callback(AscCommon.parseText(httpRequest.responseText, options, true), new AscCommon.asc_CAdvancedOptions(cp));
+							_api.endInsertDocumentUrls();
+						}
+					}, "text");
+				}, endCallback: function (_api) {
+				}
+			};
+
+			var _options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
+			_options.isNaturalDownload = true;
+			this.asc_DownloadAs(_options);
+		}
+	};
+
 	spreadsheet_api.prototype._getTextFromFile2 = function (options, callback) {
 		var t = this;
 
@@ -601,25 +634,13 @@ var editor;
 					'encodings': AscCommon.getEncodingParams()
 				};
 				t.asc_decodeBuffer(reader.result, options, callback);
-				//callback(AscCommon.parseText(reader.result, options, true), new AscCommon.asc_CAdvancedOptions(cp));
-				//t.asc_TextToColumns(new asc.asc_CTextOptions(AscCommon.c_oAscCodePageUtf8, AscCommon.c_oAscCsvDelimiter.Comma), reader.result)
 			};
 
 			reader.onerror = function () {
 				t.sendEvent("asc_onError", Asc.c_oAscError.ID.Unknown, Asc.c_oAscError.Level.NoCritical);
 			};
 
-			var encoding = "UTF-8";
-			var codePage = options.asc_getCodePage();
-			var encodingsLen = AscCommon.c_oAscEncodings.length;
-			for (var i = 0; i < encodingsLen; ++i) {
-				if (AscCommon.c_oAscEncodings[i][0] == codePage) {
-					encoding = AscCommon.c_oAscEncodings[i][2];
-					break;
-				}
-			}
-
-			reader.readAsArrayBuffer(files[0], encoding);
+			reader.readAsArrayBuffer(files[0]);
 		});
 	};
 
