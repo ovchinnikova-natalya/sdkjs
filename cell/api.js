@@ -3825,7 +3825,7 @@ var editor;
 		}
 
 		var wsView = this.wb.getWorksheet();
-		return wsView.addSparklineGroup(sDataRange, sLocationRange);
+		return wsView.addSparklineGroup(type, sDataRange, sLocationRange);
 	};
 
     spreadsheet_api.prototype.asc_setListType = function (type, subtype) {

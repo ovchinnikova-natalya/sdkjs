@@ -5641,7 +5641,7 @@
 			this._drawSelection();
 		}
 	};
-	WorksheetView.prototype.addSparklineGroup = function (sDataRange, sLocationRange) {
+	WorksheetView.prototype.addSparklineGroup = function (type, sDataRange, sLocationRange) {
 		var t = this;
 		if (!sDataRange || !sLocationRange) {
 			sDataRange = "a1:c2";
@@ -5649,8 +5649,34 @@
 			//return Asc.c_oAscError.ID.DataRangeError;
 		}
 
-		var dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
-		var locationRange = AscCommonExcel.g_oRangeCache.getAscRange(sLocationRange);
+		var dataRange, locationRange;
+		//var dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
+		//var locationRange = AscCommonExcel.g_oRangeCache.getAscRange(sLocationRange);
+
+		//временный код. locationRange - должен быть привязан только к текущему листу
+		var result = parserHelp.parse3DRef(sDataRange);
+		if (result)
+		{
+			var sheetModel = t.model.workbook.getWorksheetByName(result.sheet);
+			if (sheetModel)
+			{
+				dataRange = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
+			}
+		} else {
+			dataRange = AscCommonExcel.g_oRangeCache.getAscRange(dataRange);
+		}
+
+		result = parserHelp.parse3DRef(sLocationRange);
+		if (result)
+		{
+			sheetModel = t.model.workbook.getWorksheetByName(result.sheet);
+			if (sheetModel)
+			{
+				locationRange = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
+			}
+		} else {
+			locationRange = AscCommonExcel.g_oRangeCache.getAscRange(locationRange);
+		}
 
 		var addSparkline = function (res) {
 			if (res) {
@@ -5678,7 +5704,7 @@
 			var ws = this.model;
 			var newSparkLine = new AscCommonExcel.sparklineGroup();
 			newSparkLine.default();
-			newSparkLine.type = Asc.c_oAscSparklineType.Column/*type*/;
+			newSparkLine.type = type != undefined ? type : Asc.c_oAscSparklineType.Column;
 
 			this._isLockedCells(locationRange, /*subType*/null, addSparkline);
 
