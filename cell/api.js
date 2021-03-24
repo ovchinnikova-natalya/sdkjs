@@ -594,44 +594,6 @@ var editor;
 			specialPasteHelper.specialPasteProps.asc_setAdvancedOptions(options);
 
 			var selectionRange;
-			if (opt_activeRange) {
-				var is3dRef = parserHelp.parse3DRef(opt_activeRange);
-				//TODO вставка на другой лист
-				var range, sheetModel;
-				if (is3dRef) {
-					sheetModel = this.wb.model.getWorksheetByName(is3dRef.sheet);
-					if (sheetModel) {
-						range = AscCommonExcel.g_oRangeCache.getAscRange(is3dRef.range);
-					}
-				} else {
-					range = AscCommonExcel.g_oRangeCache.getAscRange(opt_activeRange);
-				}
-				if (range) {
-					selectionRange = ws.model.selectionRange.clone();
-					ws.model.selectionRange.ranges = [range];
-				}
-			}
-
-			this.wb.pasteData(AscCommon.c_oAscClipboardDataFormat.Text, text, null, null, true);
-
-			if (selectionRange) {
-				ws.model.selectionRange = selectionRange;
-			}
-		}
-	};
-
-	spreadsheet_api.prototype.asc_TextToColumns2 = function (options, opt_text, opt_activeRange) {
-		if (this.canEdit()) {
-			var ws = this.wb.getWorksheet();
-			var text = opt_text ? opt_text : ws.getRangeText();
-			var specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
-			if (!specialPasteHelper.specialPasteProps) {
-				specialPasteHelper.specialPasteProps = new Asc.SpecialPasteProps();
-			}
-			specialPasteHelper.specialPasteProps.property = Asc.c_oSpecialPasteProps.useTextImport;
-			specialPasteHelper.specialPasteProps.asc_setAdvancedOptions(options);
-
-			var selectionRange;
 			var activeSheet = null;
 			if (opt_activeRange) {
 				var is3dRef = parserHelp.parse3DRef(opt_activeRange);
@@ -665,7 +627,8 @@ var editor;
 			if (selectionRange) {
 				if (activeSheet !== null) {
 					activeSheet.selectionRange = selectionRange;
-					this.wb.model.nActive = activeSheet.nActive;
+					this.wb.model.nActive = ws.model.index;
+					ws.draw();
 				} else {
 					ws.model.selectionRange = selectionRange;
 				}
