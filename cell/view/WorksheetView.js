@@ -5663,7 +5663,7 @@
 				dataRange = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
 			}
 		} else {
-			dataRange = AscCommonExcel.g_oRangeCache.getAscRange(dataRange);
+			dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
 		}
 
 		result = parserHelp.parse3DRef(sLocationRange);
@@ -5675,7 +5675,7 @@
 				locationRange = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
 			}
 		} else {
-			locationRange = AscCommonExcel.g_oRangeCache.getAscRange(locationRange);
+			locationRange = AscCommonExcel.g_oRangeCache.getAscRange(sLocationRange);
 		}
 
 		var addSparkline = function (res) {
