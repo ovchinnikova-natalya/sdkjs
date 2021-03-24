@@ -493,58 +493,13 @@ var editor;
     }
   };
 
-	spreadsheet_api.prototype.asc_TextFromFileOrUrl = function (options, callback, url, _getParsedText) {
+	spreadsheet_api.prototype.asc_TextFromFileOrUrl = function (options, callback, url) {
 		if (this.canEdit()) {
-			if (_getParsedText) {
-				var text = AscCommon.g_specialPasteHelper.textFromFileOrUrl;
-				if (!text) {
-					//error
-					//no data was selected to parse
-					this.sendEvent('asc_onError', c_oAscError.ID.NoDataToParse, c_oAscError.Level.NoCritical);
-					callback(false);
-					return;
-				}
-				callback(AscCommon.parseText(text, options, true));
+			if (url) {
+				this._getTextFromUrl(url, options, callback);
 			} else {
-				if (url) {
-					this._getTextFromUrl(url, options, callback);
-				} else {
-					this._getTextFromFile(options, callback);
-				}
+				this._getTextFromFile(options, callback);
 			}
-		}
-	};
-
-	spreadsheet_api.prototype._getTextFromUrl2 = function (url, options, callback) {
-		if (this.canEdit()) {
-			var document = {url: url, format: "TXT"};
-			this.insertDocumentUrlsData = {
-				imageMap: null, documents: [document], convertCallback: function (_api, url) {
-					_api.insertDocumentUrlsData.imageMap = url;
-					if (!url['output.txt']) {
-						_api.endInsertDocumentUrls();
-						_api.sendEvent("asc_onError", Asc.c_oAscError.ID.DirectUrl, Asc.c_oAscError.Level.NoCritical);
-						return;
-					}
-					AscCommon.loadFileContent(url['output.txt'], function (httpRequest) {
-						if (httpRequest && httpRequest.responseText) {
-							AscCommon.g_specialPasteHelper.textFromFileOrUrl = httpRequest.responseText;
-							var cp = {
-								'codepage': AscCommon.c_oAscCodePageUtf8,
-								"delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
-								'encodings': AscCommon.getEncodingParams()
-							};
-							callback(AscCommon.parseText(httpRequest.responseText, options, true), new AscCommon.asc_CAdvancedOptions(cp));
-							_api.endInsertDocumentUrls();
-						}
-					}, "text");
-				}, endCallback: function (_api) {
-				}
-			};
-
-			var _options = new Asc.asc_CDownloadOptions(Asc.c_oAscFileType.TXT);
-			_options.isNaturalDownload = true;
-			this.asc_DownloadAs(_options);
 		}
 	};
 
@@ -602,7 +557,6 @@ var editor;
 
 			var reader = new FileReader();
 			reader.onload = function () {
-				//AscCommon.g_specialPasteHelper.textFromFileOrUrl = reader.result;
 				var cp = {
 					'codepage': AscCommon.c_oAscCodePageUtf8, "delimiter": AscCommon.c_oAscCsvDelimiter.Comma,
 					'encodings': AscCommon.getEncodingParams(),
@@ -617,14 +571,6 @@ var editor;
 
 			reader.readAsArrayBuffer(files[0]);
 		});
-	};
-
-	spreadsheet_api.prototype.asc_getTextFromFileOrUrl = function () {
-		return AscCommon.g_specialPasteHelper.textFromFileOrUrl;
-	};
-
-	spreadsheet_api.prototype.asc_cleanTextFromFileOrUrl = function() {
-		AscCommon.g_specialPasteHelper.textFromFileOrUrl = null;
 	};
 
 	spreadsheet_api.prototype.endInsertDocumentUrls = function()
@@ -5325,8 +5271,6 @@ var editor;
   prot["asc_TextImport"] = prot.asc_TextImport;
   prot["asc_TextToColumns"] = prot.asc_TextToColumns;
   prot["asc_TextFromFileOrUrl"] = prot.asc_TextFromFileOrUrl;
-  prot["asc_getTextFromFileOrUrl"] = prot.asc_getTextFromFileOrUrl;
-  prot["asc_cleanTextFromFileOrUrl"] = prot.asc_cleanTextFromFileOrUrl;
 
 
 
