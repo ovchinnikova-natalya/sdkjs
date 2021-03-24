@@ -3883,13 +3883,19 @@ var editor;
 		  this.wb.cellEditor.options.menuEditor;
   };
 
-  spreadsheet_api.prototype.asc_getActiveCellStr = function(referenceType) {
+  spreadsheet_api.prototype.asc_getActiveRangeStr = function(referenceType, opt_getActiveCell) {
   	var ws = this.wb.getWorksheet();
   	var res = null;
   	if (ws && ws.model && ws.model.selectionRange) {
-		var activeCell = ws.model.selectionRange.activeCell;
-		//window["AscCommonExcel"].referenceType
-		var range = new Asc.Range(activeCell.col, activeCell.row, activeCell.col, activeCell.row);
+  		var range;
+  		if (opt_getActiveCell) {
+			var activeCell = ws.model.selectionRange.activeCell;
+			range = new Asc.Range(activeCell.col, activeCell.row, activeCell.col, activeCell.row);
+		} else {
+			var lastRange = ws.model.selectionRange.getLast();
+			range = new Asc.Range(lastRange.c1, lastRange.r1, lastRange.c2, lastRange.r2);
+		}
+
 		res = range.getName(referenceType);
 	}
 	return res;
@@ -5610,7 +5616,7 @@ var editor;
   prot["asc_formatPainter"] = prot.asc_formatPainter;
   prot["asc_showAutoComplete"] = prot.asc_showAutoComplete;
   prot["asc_getHeaderFooterMode"] = prot.asc_getHeaderFooterMode;
-  prot["asc_getActiveCellStr"] = prot.asc_getActiveCellStr;
+  prot["asc_getActiveRangeStr"] = prot.asc_getActiveRangeStr;
 
 
   prot["asc_onMouseUp"] = prot.asc_onMouseUp;
