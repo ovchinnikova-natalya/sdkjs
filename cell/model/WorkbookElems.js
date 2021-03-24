@@ -5858,10 +5858,10 @@ function RangeDataManagerElem(bbox, data)
 		for (var i = 0; i < count; i++) {
 			var sL = new sparkline();
 
-			var _r1 = isVertDataRange ? i : dataRange.r1;
-			var _r2 = isVertDataRange ? i : dataRange.r2;
-			var _c1 = !isVertDataRange ? i : dataRange.c1;
-			var _c2 = !isVertDataRange ? i : dataRange.c2;
+			var _r1 = isVertDataRange ? dataRange.r1 + i : dataRange.r1;
+			var _r2 = isVertDataRange ? dataRange.r1 + i : dataRange.r2;
+			var _c1 = !isVertDataRange ? dataRange.c1 + i: dataRange.c1;
+			var _c2 = !isVertDataRange ? dataRange.c1 + i: dataRange.c2;
 			var f = this.worksheet.sName + "!" + new Asc.Range(_c1, _r1, _c2, _r2).getName();
 			sL.setF(f);
 
