@@ -3883,6 +3883,18 @@ var editor;
 		  this.wb.cellEditor.options.menuEditor;
   };
 
+  spreadsheet_api.prototype.asc_getActiveCellStr = function(referenceType) {
+  	var ws = t.wb.getWorksheet();
+  	var res = null;
+  	if (ws && ws.model && ws.model.selectionRange) {
+		var activeCell = ws.model.selectionRange.activeCell;
+		//window["AscCommonExcel"].referenceType
+		var range = new Asc.Range(activeCell.col, activeCell.row, activeCell.col, activeCell.row);
+		res = range.getName(referenceType);
+	}
+	return res;
+  };
+
   spreadsheet_api.prototype.asc_getIsTrackShape = function()  {
     return this.wb ? this.wb.getIsTrackShape() : false;
   };
@@ -5598,6 +5610,8 @@ var editor;
   prot["asc_formatPainter"] = prot.asc_formatPainter;
   prot["asc_showAutoComplete"] = prot.asc_showAutoComplete;
   prot["asc_getHeaderFooterMode"] = prot.asc_getHeaderFooterMode;
+  prot["asc_getActiveCellStr"] = prot.asc_getActiveCellStr;
+
 
   prot["asc_onMouseUp"] = prot.asc_onMouseUp;
 
