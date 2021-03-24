@@ -3884,7 +3884,7 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_getActiveCellStr = function(referenceType) {
-  	var ws = t.wb.getWorksheet();
+  	var ws = this.wb.getWorksheet();
   	var res = null;
   	if (ws && ws.model && ws.model.selectionRange) {
 		var activeCell = ws.model.selectionRange.activeCell;
