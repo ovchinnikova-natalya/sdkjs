@@ -5862,7 +5862,7 @@ function RangeDataManagerElem(bbox, data)
 			var _r2 = isVertDataRange ? dataRange.r1 + i : dataRange.r2;
 			var _c1 = !isVertDataRange ? dataRange.c1 + i: dataRange.c1;
 			var _c2 = !isVertDataRange ? dataRange.c1 + i: dataRange.c2;
-			var f = this.worksheet.sName + "!" + new Asc.Range(_c1, _r1, _c2, _r2).getName();
+			var f = (dataRange.sheet ? dataRange.sheet : this.worksheet.sName) + "!" + new Asc.Range(_c1, _r1, _c2, _r2).getName();
 			sL.setF(f);
 
 			var _col = !isVertLocationRange ? locationRange.c1 + i : locationRange.c1;

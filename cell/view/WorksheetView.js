@@ -5649,27 +5649,18 @@
 			//return Asc.c_oAscError.ID.DataRangeError;
 		}
 
-		var dataRange, locationRange;
-		//var dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
-		//var locationRange = AscCommonExcel.g_oRangeCache.getAscRange(sLocationRange);
+		var locationRange;
 
 		//временный код. locationRange - должен быть привязан только к текущему листу
-		var result = parserHelp.parse3DRef(sDataRange);
-		if (result)
-		{
-			var sheetModel = t.model.workbook.getWorksheetByName(result.sheet);
-			if (sheetModel)
-			{
-				dataRange = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
-			}
-		} else {
+		var dataRange = AscCommonExcel.g_oRangeCache.getRange3D(sDataRange);
+		if (!dataRange) {
 			dataRange = AscCommonExcel.g_oRangeCache.getAscRange(sDataRange);
 		}
 
-		result = parserHelp.parse3DRef(sLocationRange);
+		var result = parserHelp.parse3DRef(sLocationRange);
 		if (result)
 		{
-			sheetModel = t.model.workbook.getWorksheetByName(result.sheet);
+			var sheetModel = t.model.workbook.getWorksheetByName(result.sheet);
 			if (sheetModel)
 			{
 				locationRange = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
