@@ -5704,7 +5704,8 @@
 
     // --- Cache ---
     WorksheetView.prototype._cleanCache = function (range) {
-		var s = this.cache.sectors;
+		//console.log(this.cache.sectors)
+    	var s = this.cache.sectors;
 		var rows = this.cache.rows;
 
         if (range === undefined) {
@@ -5718,6 +5719,7 @@
 					delete rows[j];
 				}
 				delete s[i];
+				console.log("delete: " + i);
 			}
 		}
     };
@@ -5766,6 +5768,7 @@
      */
     WorksheetView.prototype._prepareCellTextMetricsCache2 = function (r1, r2) {
         var firstUpdateRow = null;
+		//console.log("r1: " + r1 + " ;r2:" + r2);
         var s = this.cache.sectors;
         for (var i = Asc.floor(r1 / kRowsCacheSize), l = Asc.floor(r2 / kRowsCacheSize); i <= l; ++i) {
         	if (!s[i]) {
@@ -5773,6 +5776,7 @@
 					firstUpdateRow = i * kRowsCacheSize;
 				}
 				s[i] = true;
+				console.log("add: " + i);
 				this._calcCellsTextMetrics(i * kRowsCacheSize, (i + 1) * kRowsCacheSize - 1);
 			}
 		}
@@ -5844,6 +5848,11 @@
 
     WorksheetView.prototype._addCellTextToCache = function (col, row) {
         var self = this;
+
+        if (row > 80 && row < 84) {
+        	console.log(row);
+			console.log(col);
+		}
 
         function makeFnIsGoodNumFormat(flags, width) {
             return function (str) {
