@@ -6168,7 +6168,8 @@ function RangeDataManagerElem(bbox, data)
 			equalColors(this.colorMarkers, oSparklineGroup.colorMarkers) &&
 			equalColors(this.colorFirst, oSparklineGroup.colorFirst) &&
 			equalColors(this.colorLast, oSparklineGroup.colorLast) &&
-			equalColors(this.colorHigh, oSparklineGroup.colorHigh) && equalColors(this.colorLow, oSparklineGroup.colorLow);
+			equalColors(this.colorHigh, oSparklineGroup.colorHigh) &&
+			equalColors(this.colorLow, oSparklineGroup.colorLow);
 	};
 
 	sparklineGroup.prototype.asc_getStyles = function (type) {
