@@ -15550,7 +15550,6 @@
 					}
 				}
 
-				var aSparklineGroups;
 				if (wsTo.aSparklineGroups && wsTo.aSparklineGroups.length) {
 					wsTo.removeSparklines(to);
 				}
@@ -15558,7 +15557,7 @@
 					for (var i = to.c1; i <= to.c2; i += nDx) {
 						for (var j = to.r1; j <= to.r2; j += nDy) {
 							for(var k = 0, length3 = wsFrom.aSparklineGroups.length; k < length3; k++){
-								var _arrSparklines = wsFrom.aSparklineGroups[k].getModifySparklinesForMove(from, new AscCommon.CellBase(nLastRow - from.r2, nLastCol - from.c2));
+								var _arrSparklines = wsFrom.aSparklineGroups[k].getModifySparklinesForPromote(from, to, new AscCommon.CellBase(j - from.r1, i - from.c1));
 								if (_arrSparklines) {
 									wsFrom.aSparklineGroups[k].setSparklines(_arrSparklines, true, true);
 								}
