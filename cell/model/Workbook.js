@@ -15554,34 +15554,13 @@
 				if (wsTo.aSparklineGroups && wsTo.aSparklineGroups.length) {
 					wsTo.removeSparklines(to);
 				}
-				if(aDataValidations && aDataValidations.length > 0) {
-					var newDataValidations = [];
+				if(wsFrom === wsTo && wsFrom.aSparklineGroups && wsFrom.aSparklineGroups.length) {
 					for (var i = to.c1; i <= to.c2; i += nDx) {
 						for (var j = to.r1; j <= to.r2; j += nDy) {
-							for(var k = 0, length3 = aDataValidations.length; k < length3; k++){
-								var oDataValidation = aDataValidations[k];
-								var ranges = oDataValidation.ranges;
-								for (var n = 0; n < ranges.length; n++) {
-									var _newRange = new Asc.Range(i + ranges[n].c1 - from.c1, j + ranges[n].r1 - from.r1, i + ranges[n].c2 - from.c1, j + ranges[n].r2 - from.r1);
-									if (to.containsRange(_newRange)) {
-										if (!newDataValidations[k]) {
-											newDataValidations[k] = [];
-										}
-										newDataValidations[k].push(_newRange);
-									}
-								}
-							}
-						}
-					}
-					if (newDataValidations && newDataValidations.length) {
-						for (var i = 0; i < newDataValidations.length; i++) {
-							if (newDataValidations[i] && newDataValidations[i].length) {
-								var fromDataValidation = wsFrom.getDataValidationById(aDataValidations[i].id);
-								if (fromDataValidation) {
-									fromDataValidation = fromDataValidation.data;
-									var toDataValidation = fromDataValidation.clone();
-									toDataValidation.ranges = fromDataValidation.ranges.concat(newDataValidations[i]);
-									wsTo.dataValidations.change(wsTo, fromDataValidation, toDataValidation, true);
+							for(var k = 0, length3 = wsFrom.aSparklineGroups.length; k < length3; k++){
+								var _arrSparklines = wsFrom.aSparklineGroups[k].getModifySparklinesForMove(from, new AscCommon.CellBase(nLastRow - from.r2, nLastCol - from.c2));
+								if (_arrSparklines) {
+									wsFrom.aSparklineGroups[k].setSparklines(_arrSparklines, true, true);
 								}
 							}
 						}

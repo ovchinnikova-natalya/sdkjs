@@ -5908,6 +5908,33 @@ function RangeDataManagerElem(bbox, data)
 		}
 		return null;
 	};
+	sparklineGroup.prototype.getModifySparklinesForMove = function (range, offset) {
+		var newArr = [];
+		var needAdd = false;
+		for (var i = 0; i < this.arrSparklines.length; i++) {
+			if (this.arrSparklines[i].sqRef && range.containsRange(this.arrSparklines[i].sqRef)) {
+				var cloneElem = this.arrSparklines[i].clone();
+				cloneElem.sqRef.setOffset(offset);
+
+					/*if (range.isIntersectForShift(cloneElem._f, offset)) {
+						_isChange = cloneElem._f.forShift(range, offset);
+					}
+					if (_isChange) {
+						isChange = true;
+						AscCommonExcel.executeInR1C1Mode(false, function () {
+							cloneElem.f = cloneElem._f.getName();
+						});
+					}*/
+
+				newArr.push(this.arrSparklines[i]);
+				newArr.push(cloneElem);
+				needAdd = true;
+			} else {
+				newArr.push(this.arrSparklines[i].clone());
+			}
+		}
+		return newArr.length && needAdd ? newArr : null;
+	};
 	sparklineGroup.prototype.asc_getId = function () {
 		return this.Id;
 	};
