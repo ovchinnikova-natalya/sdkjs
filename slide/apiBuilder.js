@@ -879,7 +879,8 @@
 
     /**
      * Specify a vertical axis orientation.
-     * @param {bool} bIsMinMax - Specifies if a lowest value is displayed at the vertical axis start or not.
+     * @param {bool} bIsMinMax - The <code>true</code> value will set the normal data direction for the horizontal axis
+	 * (from minimum to maximum). The <code>false</code> value will set the inverted data direction for the horizontal axis (from maximum to minimum).
      * */
     ApiChart.prototype.SetVerAxisOrientation = function(bIsMinMax){
         AscFormat.builder_SetChartVertAxisOrientation(this.Chart, bIsMinMax);
@@ -887,7 +888,8 @@
 
     /**
      * Specify a horizontal axis orientation.
-     * @param {bool} bIsMinMax - Specifies if a lowest value is displayed at the horizontal axis start or not.
+     * @param {bool} bIsMinMax - The <code>true</code> value will set the normal data direction for the horizontal axis
+	 * (from minimum to maximum). The <code>false</code> value will set the inverted data direction for the horizontal axis (from maximum to minimum).
      * */
     ApiChart.prototype.SetHorAxisOrientation = function(bIsMinMax){
         AscFormat.builder_SetChartHorAxisOrientation(this.Chart, bIsMinMax);
@@ -908,8 +910,8 @@
 
     /**
      * Spicify the show options for data labels.
-     * @param {number} nSeriesIndex - the series index from the array of the data used to build the chart from.
-     * @param {number} nPointIndex - the point index from this series.
+     * @param {number} nSeriesIndex - The series index from the array of the data used to build the chart from.
+     * @param {number} nPointIndex - The point index from this series.
      * @param {boolean} bShowSerName - Whether to show or hide the source table column names used for the data which the chart will be build from.
      * @param {boolean} bShowCatName - Whether to show or hide the source table row names used for the data which the chart will be build from.
      * @param {boolean} bShowVal - Whether to show or hide the chart data values.
