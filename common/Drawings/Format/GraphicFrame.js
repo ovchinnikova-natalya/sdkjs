@@ -245,6 +245,14 @@ CGraphicFrame.prototype.GetSearchElementId = function(bNext, bCurrent)
         return null;
 };
 
+CGraphicFrame.prototype.FindNextFillingForm = function(isNext, isCurrent)
+{
+	if (this.graphicObject)
+		return this.graphicObject.FindNextFillingForm(isNext, isCurrent);
+
+	return null;
+};
+
 CGraphicFrame.prototype.copy = function(oPr)
     {
         var ret = new CGraphicFrame();
@@ -266,7 +274,14 @@ CGraphicFrame.prototype.copy = function(oPr)
             ret.spPr.setParent(ret);
         }
         ret.setBDeleted(false);
-
+        if(this.macro !== null)
+        {
+            ret.setMacro(this.macro);
+        }
+        if(this.textLink !== null)
+        {
+            ret.setTextLink(this.textLink);
+        }
         if(!this.recalcInfo.recalculateTable && !this.recalcInfo.recalculateSizes && !this.recalcInfo.recalculateTransform)
         {
             ret.cachedImage = this.getBase64Img();
@@ -366,6 +381,12 @@ CGraphicFrame.prototype.Set_Props= function(props)
 
 CGraphicFrame.prototype.updateCursorType= function(x, y, e)
     {
+        var oApi = Asc.editor || editor;
+        var isDrawHandles = oApi ? oApi.isShowShapeAdjustments() : true;
+        if(isDrawHandles === false)
+        {
+            return;
+        }
         var tx = this.invertTransform.TransformPointX(x, y);
         var ty = this.invertTransform.TransformPointY(x, y);
         this.graphicObject.UpdateCursorType(tx, ty, 0)
@@ -617,23 +638,6 @@ CGraphicFrame.prototype.getInvertTransform = function()
         return this.invertTransform;
 };
 
-CGraphicFrame.prototype.hitInBoundingRect = function(x, y)
-    {
-        var invert_transform = this.getInvertTransform();
-        if(!invert_transform){
-            return false;
-        }
-        var x_t = invert_transform.TransformPointX(x, y);
-        var y_t = invert_transform.TransformPointY(x, y);
-
-        var _hit_context = this.getParentObjects().presentation.DrawingDocument.CanvasHitContext;
-
-        return (HitInLine(_hit_context, x_t, y_t, 0, 0, this.extX, 0) ||
-            HitInLine(_hit_context, x_t, y_t, this.extX, 0, this.extX, this.extY)||
-            HitInLine(_hit_context, x_t, y_t, this.extX, this.extY, 0, this.extY)||
-            HitInLine(_hit_context, x_t, y_t, 0, this.extY, 0, 0));
-};
-
 CGraphicFrame.prototype.Document_UpdateRulersState  = function(margins)
     {
         if(this.graphicObject)
@@ -814,9 +818,6 @@ CGraphicFrame.prototype.deleteDrawingBase = CShape.prototype.deleteDrawingBase;
 
 CGraphicFrame.prototype.addToDrawingObjects = CShape.prototype.addToDrawingObjects;
 
-CGraphicFrame.prototype.select = CShape.prototype.select;
-
-CGraphicFrame.prototype.deselect = CShape.prototype.deselect;
 
 CGraphicFrame.prototype.Update_ContentIndexing = function()
 {};

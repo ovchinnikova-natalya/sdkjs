@@ -42,15 +42,38 @@
 	}
 
 	/**
+	 * Base class.
 	 * @global
 	 * @class
 	 * @name Api
+	 * @property {Array} Sheets - Returns the Sheets collection that represents all the sheets in the active workbook.
+	 * @property {ApiWorksheet} ActiveSheet - Returns an object that represents the active sheet.
+	 * @property {ApiRange} Selection - Returns an object that represents the selection range.
 	 */
 	var Api = window["Asc"]["spreadsheet_api"];
 
 	/**
 	 * Class representing a sheet.
 	 * @constructor
+	 * @property {bool} Visible - Returns or sets the state of sheet visibility.
+	 * @property {number} Active - Makes the current sheet the active sheet.
+	 * @property {ApiRange} ActiveCell - Returns an object that represents the active cell.
+	 * @property {ApiRange} Selection - Returns an object that represents the selection range.
+	 * @property {ApiRange} Cells - Returns ApiRange that represents all the cells on the worksheet (not just the cells that are currently in use).
+	 * @property {ApiRange} Rows - Returns ApiRange that represents all the cells of the rows range.
+	 * @property {ApiRange} Cols - Returns ApiRange that represents all the cells of the columns range.
+	 * @property {ApiRange} UsedRange - Returns ApiRange that represents the used range on the specified worksheet.
+	 * @property {string} Name - Returns or sets a name of the active sheet.
+	 * @property {number} Index - Returns a sheet index.
+	 * @property {number} LeftMargin - Returns or sets the size of the sheet left margin measured in points.
+	 * @property {number} RightMargin - Returns or sets the size of the sheet right margin measured in points.
+	 * @property {number} TopMargin - Returns or sets the size of the sheet top margin measured in points.
+	 * @property {number} BottomMargin - Returns or sets the size of the sheet bottom margin measured in points.
+	 * @property {PageOrientation} PageOrientation - Returns or sets the page orientation.
+	 * @property {bool} PrintHeadings - Returns or sets the page PrintHeadings property.
+	 * @property {bool} PrintGridlines - Returns or sets the page PrintGridlines property.
+	 * @property {Array} Defnames - Returns an array of the ApiName objects.
+	 * @property {Array} Comments - Returns an array of the ApiComment objects.
 	 */
 	function ApiWorksheet(worksheet) {
 		this.worksheet = worksheet;
@@ -59,6 +82,33 @@
 	/**
 	 * Class representing a range.
 	 * @constructor
+	 * @property {number} Row - Returns the row number for the selected cell.
+	 * @property {number} Col - Returns the column number for the selected cell.
+	 * @property {ApiRange} Rows - Returns the ApiRange object that represents the rows of the specified range.
+	 * @property {number} Count - Returns the rows or columns count.
+	 * @property {string} Value - Returns the value from the first cell of the specified range or sets it to this cell.
+	 * @property {string} Formula - Returns the formula from the first cell of the specified range or sets it to this cell.
+	 * @property {string} Value2 - Returns the value2 (value without format) from the first cell of the specified range or sets it to this cell.
+	 * @property {string} Text - Returns the text from the first cell of the specified range or sets it to this cell.
+	 * @property {ApiColor} FontColor - Sets the text color to the current cell range with the previously created color object.
+	 * @property {bool} Hidden - Returns or sets the value hiding property.
+	 * @property {number} ColumnWidth - Returns or sets the width of all the columns in the specified range measured in points.
+	 * @property {number} Width - Returns a value that represents the range width measured in points.
+	 * @property {number} RowHeight - Returns or sets the height of the first row in the specified range measured in points.
+	 * @property {number} Height - Returns a value that represents the range height measured in points.
+	 * @property {number} FontSize - Sets the font size to the characters of the current cell range.
+	 * @property {string} FontName - Sets the specified font family as the font name for the current cell range.
+	 * @property {'center' | 'bottom' | 'top' | 'distributed' | 'justify'} AlignVertical - Sets the text vertical alignment to the current cell range.
+	 * @property {'left' | 'right' | 'center' | 'justify'} AlignHorizontal - Sets the text horizontal alignment to the current cell range.
+	 * @property {bool} Bold - Sets the bold property to the text characters from the current cell or cell range.
+	 * @property {'none' | 'single' | 'singleAccounting' | 'double' | 'doubleAccounting'} Underline - Sets the type of underline applied to the font.
+	 * @property {bool} Strikeout - Sets a value that indicates whether the contents of the current cell or cell range are displayed struck through.
+	 * @property {ApiColor|'No Fill'} FillColor - Returns or sets the background color of the current cell range.
+	 * @property {string} NumberFormat - Sets a value that represents the format code for the object.
+	 * @property {ApiRange} MergeArea - Returns the cell or cell range from the merge area.
+	 * @property {ApiWorksheet} Worksheet - Returns the ApiWorksheet object that represents the worksheet containing the specified range.
+	 * @property {ApiName} DefName - Returns the ApiName object.
+	 * @property {ApiComment | null} Comments - Returns the ApiComment collection that represents all the comments from the specified worksheet.
 	 */
 	function ApiRange(range) {
 		this.range = range;
@@ -165,6 +215,9 @@
 	/**
 	 * Class representing the names.
 	 * @constructor
+	 * @property {string} Name - Sets a name to the active sheet.
+	 * @property {string} RefersTo - Returns or sets the formula that the name is defined to refer to.
+	 * @property {apiRange} RefersToRange - Returns the ApiRange object by reference.
 	 */
 	function ApiName(DefName) {
 		this.DefName = DefName;
@@ -173,9 +226,11 @@
 	/**
 	 * Class representing the comments.
 	 * @constructor
+	 * @property {string} Text - Returns the text from the first cell in range.
 	 */
-	function ApiComment(comment) {
+	function ApiComment(comment, ws) {
 		this.Comment = comment;
+		this.WS = ws;
 	}
 
 	/**
@@ -337,12 +392,12 @@
 	 * @returns {ApiRange | Error}
 	 */
 	Api.prototype.Intersect  = function (Range1, Range2) {
-		if (Range1.Worksheet.Id === Range2.Worksheet.Id) {
+		if (Range1.GetWorksheet().Id === Range2.GetWorksheet().Id) {
 			var res = Range1.range.bbox.intersection(Range2.range.bbox);
 			if (!res) {
 				return "Ranges do not intersect.";
 			} else {
-				return new ApiRange(this.ActiveSheet.worksheet.getRange3(res.r1, res.c1, res.r2, res.c2));
+				return new ApiRange(this.GetActiveSheet().worksheet.getRange3(res.r1, res.c1, res.r2, res.c2));
 			}
 		} else {
 			return new Error('Ranges should be from one worksheet.');
@@ -528,33 +583,45 @@
 
 	Api.prototype.RecalculateAllFormulas = function(fLogger) {
 		var formulas = this.wbModel.getAllFormulas(true);
-
-		var _compare = function (_val1, _val2) {
+		var _compare = function(_val1, _val2) {
 			if (!isNaN(parseFloat(_val1)) && isFinite(_val1) && !isNaN(parseFloat(_val2)) && isFinite(_val2)) {
-				var nRound = null;
-				//max count digits in number
-				var maxLengthAfterPoint = 9;
-				var sVal1 = _val1.toString();
-				if (sVal1) {
-					var aVal1 = sVal1.split('.');
-					if (aVal1 && aVal1[1] && aVal1[1].length) {
-						nRound = aVal1[1].length - 1;
-						if (nRound > maxLengthAfterPoint) {
-							nRound = maxLengthAfterPoint;
+				var eps = 1e-12;
+				if (Math.abs(_val2 - _val1) < eps) {
+					return true;
+				}
+
+				var _slice = function (_val) {
+					var sVal = _val.toString();
+					if (sVal) {
+						var aVal1 = sVal.split(".");
+						if (aVal1[1]) {
+							aVal1[1] = aVal1[1].slice(0, 9);
+							sVal = aVal1[0] + "." + aVal1[1];
+						}
+						sVal = sVal.slice(0, 14);
+						_val = parseFloat(sVal);
+					}
+					return _val;
+				};
+
+				_val1 = _slice(_val1);
+				_val2 = _slice(_val2);
+			} else {
+				if (_val1 && _val2) {
+
+					var complexVal1 = AscCommonExcel.Complex.prototype.ParseString(_val1 + "");
+					if (complexVal1 && complexVal1.real && complexVal1.img) {
+						var complexVal2 = AscCommonExcel.Complex.prototype.ParseString(_val2 + "");
+						if (complexVal2 && complexVal2.real && complexVal2.img) {
+							if (_compare(complexVal1.real, complexVal2.real) && _compare(complexVal1.img, complexVal2.img)) {
+								return true;
+							}
 						}
 					}
 				}
-
-				if (nRound) {
-					var kF = Math.pow(10, nRound);
-					_val1 = (parseInt(_val1 * kF)) / kF;
-					_val2 = (parseInt(_val2 * kF)) / kF;
-				}
 			}
-
 			return _val1 == _val2;
 		};
-
 		for (var i = 0; i < formulas.length; ++i) {
 			var formula = formulas[i];
 			var nRow;
@@ -563,7 +630,9 @@
 				nRow = formula.r;
 				nCol = formula.c;
 				formula = formula.f;
-			} else if (formula.parent) {
+			}
+
+			if (formula.parent) {
 				nRow = formula.parent.nRow;
 				nCol = formula.parent.nCol;
 			}
@@ -574,33 +643,7 @@
 				formula.setFormula(formula.getFormula());
 				formula.parse();
 				var formulaRes = formula.calculate();
-				var arrayFormula = formula.getArrayFormulaRef();
-				var newValue = null;
-				if (arrayFormula && formulaRes.type === AscCommonExcel.cElementType.array) {
-					if (formulaRes.array) {
-						var isOneRow = formulaRes.array.length === 1;
-						var isOneCol = formulaRes.array[0] && formulaRes.array[0].length === 1;
-
-						var rowArray = nRow - arrayFormula.r1;
-						var colArray = nCol - arrayFormula.c1;
-						if (isOneRow && rowArray > 0 && colArray === 0) {
-							colArray = rowArray;
-							rowArray = 0;
-						}
-						if (isOneCol && colArray > 0 && rowArray === 0) {
-							rowArray = colArray;
-							colArray = 0;
-						}
-
-						if (formulaRes.array[rowArray]) {
-							newValue = formulaRes.getElementRowCol(rowArray, colArray);
-						}
-					}
-					newValue = newValue ? newValue.getValue() : "#N/A";
-				} else {
-					newValue = formulaRes ? formulaRes.getValue() : "#N/A";
-				}
-
+				var newValue = formula.simplifyRefType(formulaRes, formula.ws, nRow, nCol);
 				if (fLogger) {
 					if (!_compare(oldValue, newValue)) {
 						//error
@@ -655,7 +698,7 @@
 		this.worksheet.workbook.setActive(this.worksheet.index);
 	};
 	Object.defineProperty(ApiWorksheet.prototype, "Active", {
-		get: function () {
+		set: function () {
 			this.SetActive();
 		}
 	});
@@ -696,10 +739,23 @@
 	 * Return an ApiRange that represents all the cells on the worksheet (not just the cells that are currently in use).
 	 * @memberof ApiWorksheet
 	 * @typeofeditors ["CSE"]
+	 * @param {number} row - The number of the row or the number of cell (if only row defined)
+	 * @param {number} col - The number of col
 	 * @returns {ApiRange}
 	 */
-	ApiWorksheet.prototype.GetCells = function () {
-		return new ApiRange(this.worksheet.getRange3(0, 0, AscCommon.gc_nMaxRow0, AscCommon.gc_nMaxCol0));
+	ApiWorksheet.prototype.GetCells = function (row, col) {
+		if (row) row--;
+		if (typeof col !== "undefined" && typeof row !== "undefined") {
+			return new ApiRange(this.worksheet.getRange3(row, col, row, col));
+		} else if (typeof row !== "undefined") {
+			var r = (row) ?  (row / AscCommon.gc_nMaxCol0) >> 0 : row;
+			var c = (row) ? row % AscCommon.gc_nMaxCol0 : row;
+			if (r && c) c--;
+			return new ApiRange(this.worksheet.getRange3(r, c, r, c));
+		}
+		else {
+			return new ApiRange(this.worksheet.getRange3(0, 0, AscCommon.gc_nMaxRow0, AscCommon.gc_nMaxCol0));
+		}
 	};
 	Object.defineProperty(ApiWorksheet.prototype, "Cells", {
 		get: function () {
@@ -721,7 +777,7 @@
 	 */
 	ApiWorksheet.prototype.GetRows = function (value) {
 		if (typeof  value === "undefined") {
-			return this.Rows;
+			return this.GetCells();
 		} else if (typeof value == "number" || value.indexOf(':') == -1) {
 			value = parseInt(value);
 			if (value > 0) {
@@ -794,7 +850,12 @@
 	 * @param {string} sName - The name which will be displayed for the current sheet at the sheet tab.
 	 */
 	ApiWorksheet.prototype.SetName = function (sName) {
+		var sOldName = this.worksheet.getName();
 		this.worksheet.setName(sName);
+		var oWorkbook = this.worksheet.workbook;
+		if(oWorkbook) {
+			oWorkbook.handleChartsOnChangeSheetName(this.worksheet, sOldName, sName)
+		}
 	};
 	Object.defineProperty(ApiWorksheet.prototype, "Name", {
 		get: function () {
@@ -1169,7 +1230,7 @@
 	ApiWorksheet.prototype.GetComments = function () {
 		var comments = [];
 		for (var i = 0; i < this.worksheet.aComments.length; i++) {
-			comments.push(new ApiComment(this.worksheet.aComments[i]));
+			comments.push(new ApiComment(this.worksheet.aComments[i], this.worksheet.workbook.getWorksheet(this.Index)));
 		}
 		return comments;
 	};
@@ -1201,6 +1262,11 @@
 		var range = new ApiRange(this.worksheet.getRange2(sRange));
 		var p = /^(?:http:\/\/|https:\/\/)/;
 		if (range && range.range.isOneCell() && sAddress) {
+			var externalLink = sAddress.match(p) || sAddress.search(/mailto:/i) !== -1;
+			if (externalLink && AscCommonExcel.getFullHyperlinkLength(sAddress) > Asc.c_nMaxHyperlinkLength) {
+				return null;
+			}
+
 			this.worksheet.selectionRange.assign2(range.range.bbox);
 			var  Hyperlink = new Asc.asc_CHyperlink();
 			if (sScreenTip) {
@@ -1211,11 +1277,11 @@
 			if (sTextToDisplay) {
 				Hyperlink.asc_setTooltip(sTextToDisplay);
 			}
-			if (sAddress.match(p) || sAddress.search(/mailto:/i) !== -1) {
+			if (externalLink) {
 				Hyperlink.asc_setHyperlinkUrl(sAddress);
 			} else {
 				Hyperlink.asc_setRange(sAddress);
-				Hyperlink.asc_setSheet(this.Name);
+				Hyperlink.asc_setSheet(this.GetName());
 			}
 			this.worksheet.workbook.oApi.wb.insertHyperlink(Hyperlink);
 		}
@@ -1413,7 +1479,7 @@
 	/**
 	 * Get the type of this class.
 	 * @memberof ApiRange
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CSE"]
 	 * @returns {"range"}
 	 */
 	ApiRange.prototype.GetClassType = function()
@@ -1468,14 +1534,16 @@
 	 */
 	ApiRange.prototype.GetRows = function (nRow) {
 		if (typeof nRow === "undefined") {
-			var r1 = this.range.bbox.r1;
-			var r2 = this.range.bbox.r2;
+			var r1 = this.range.bbox.r1 + 1;
+			var r2 = this.range.bbox.r2 + 1;
 			return new ApiWorksheet(this.range.worksheet).GetRows(r1 + ":" + r2);
-			// return new ApiWorksheet(this.range.worksheet).Rows;	// return all rows from current sheet
+			// return new ApiWorksheet(this.range.worksheet).GetRows();	// return all rows from current sheet
 		} else if ( (nRow >= this.range.bbox.r1) && (nRow <= this.range.bbox.r2) ) {
 			return new ApiWorksheet(this.range.worksheet).GetRows(nRow);
 		} else {
 			var bbox = this.range.bbox;
+			if (nRow)
+				nRow--;
 			return new ApiRange(this.range.worksheet.getRange3(nRow, bbox.c1, nRow, bbox.c2));
 		}
 	};
@@ -1486,7 +1554,96 @@
 	});
 
 	/**
-	 * Set cell offset.
+	 * Returns a Range object that represents all the cells in the specified range or specified cell.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @param {number} nCol - The number of the col. * 
+	 * @returns {ApiRange}
+	 */
+	 ApiRange.prototype.GetCols = function (nCol) {
+		if (nCol) nCol--;
+		if (typeof nCol === "undefined") {
+			return new ApiRange(this.range.worksheet.getRange3(0, this.range.bbox.c1, AscCommon.gc_nMaxRow0, this.range.bbox.c2));
+		} else if ( (nCol >= this.range.bbox.c1) && (nCol <= this.range.bbox.c2) ) {
+			return new ApiRange(this.range.worksheet.getRange3(0, nCol, AscCommon.gc_nMaxRow0, nCol));
+		} else {
+			return new ApiRange(this.range.worksheet.getRange3(this.range.bbox.r1, nCol, this.range.bbox.r2, nCol));
+		}
+	};
+	Object.defineProperty(ApiRange.prototype, "Cols", {
+		get: function () {
+			return this.GetCols();
+		}
+	});
+
+	/**
+	 * Returns a Range object that represents the end in the specified direction in the specified range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @param {string} direction - The direction of end in the specified range. * 
+	 * @returns {ApiRange}
+	 */
+	 ApiRange.prototype.End = function (direction) {
+		var bbox = this.range.bbox;
+		var r1, c1, r2, c2;
+		switch (direction) {
+			case "xlUp":
+				r1 = r2 = 0;
+				c1 = c2 = bbox.c1;
+				break;
+			case "xlDown":
+				r1 = r2 = AscCommon.gc_nMaxRow0;
+				c1 = c2 = bbox.c1;
+				break;
+			case "xlToRight":
+				r1 = r2 = bbox.r1;
+				c1 = c2 = AscCommon.gc_nMaxCol0;
+				break;
+			case "xlToLeft":
+				r1 = r2 = bbox.r1;
+				c1 = c2 = 0;
+				break;
+			default:
+				r1 = bbox.r1;
+				c1 = bbox.c1;
+				r2 = bbox.r2;
+				c2 = bbox.c2;
+				break;
+		}
+		return new ApiRange(this.range.worksheet.getRange3(r1, c1, r2, c2));
+	};
+
+	/**
+	 * Returns a Range object that represents the cols in the specified range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @param {number} row - The number of the row or the number of cell (if only row defined)
+	 * @param {number} col - The number of col
+	 * @returns {ApiRange}
+	 */
+	 ApiRange.prototype.GetCells = function (row, col) {
+		if (row) row--;
+		var bbox = this.range.bbox;
+		if (typeof col !== "undefined" && typeof row !== "undefined") {
+			return new ApiRange(this.range.worksheet.getRange3(row, col, row, col));
+		} else if (typeof row !== "undefined") {
+			var cellCount = bbox.c2 - bbox.c1 + 1; 
+			var r = bbox.r1 + ((row) ?  (row / cellCount) >> 0 : row);
+			var c = bbox.c1 + ((r) ? 1 : 0) + ((row) ? row % cellCount : row);
+			if (r && c) c--;
+			return new ApiRange(this.range.worksheet.getRange3(r, c, r, c));
+		} else {
+			return new ApiRange(this.range.worksheet.getRange3(bbox.r1, bbox.c1, bbox.r2, bbox.c2));
+		}
+	};
+	Object.defineProperty(ApiRange.prototype, "Cells", {
+		get: function () {
+			return this.GetCells();
+		}
+	});
+
+	/**
+	 * Set cell offset
 	 * @memberof ApiRange
 	 * @typeofeditors ["CSE"]
 	 * @param {number} nRow - The row number.
@@ -1718,7 +1875,6 @@
 				worksheet.setRowHidden(isHidden, bbox.r1, bbox.r2);
 				break;				
 		}
-		this.range.worksheet.workbook.oApi.wb.handlers.trigger("changeWorksheetUpdate", this.range.worksheet.getId());
 	};
 	Object.defineProperty(ApiRange.prototype, "Hidden", {
 		get: function () {
@@ -1751,7 +1907,6 @@
 	 */
 	ApiRange.prototype.SetColumnWidth = function (nWidth) {
 		this.range.worksheet.setColWidth(nWidth, this.range.bbox.c1, this.range.bbox.c2);
-		this.range.worksheet.workbook.oApi.wb.handlers.trigger("changeWorksheetUpdate", this.range.worksheet.getId());
 	};
 	Object.defineProperty(ApiRange.prototype, "ColumnWidth", {
 		get: function () {
@@ -1794,7 +1949,6 @@
 	 */
 	ApiRange.prototype.SetRowHeight = function (nHeight) {
 		this.range.worksheet.setRowHeight(nHeight, this.range.bbox.r1, this.range.bbox.r2, false);
-		this.range.worksheet.workbook.oApi.wb.handlers.trigger("changeWorksheetUpdate", this.range.worksheet.getId())
 	};
 	Object.defineProperty(ApiRange.prototype, "RowHeight", {
 		get: function () {
@@ -2261,7 +2415,8 @@
 		if (!this.range.isOneCell()) {
 			return null;
 		}
-		return new ApiComment(this.range.worksheet.workbook.oApi.wb.getWorksheet(this.range.worksheet.getIndex()).cellCommentator.getComment(this.range.bbox.c1, this.range.bbox.r1, false));
+		var ws = this.range.worksheet.workbook.oApi.wb.getWorksheet(this.range.worksheet.getIndex());
+		return new ApiComment(ws.cellCommentator.getComment(this.range.bbox.c1, this.range.bbox.r1, false), ws);
 	};
 	Object.defineProperty(ApiRange.prototype, "Comments", {
 		get: function () {
@@ -2282,6 +2437,46 @@
 		}
 	};
 
+	/**
+	 * returns getAngle
+	 * @memberof ApiRange
+	 * @return {getAngle}
+	 */
+	ApiRange.prototype.GetOrientation = function() {
+	  return this.range.getAngle();
+	};
+
+	/**
+	 * Sets the angle for the range
+	 * @memberof ApiRange
+	 * @param {angle}
+	 */
+	ApiRange.prototype.SetOrientation = function(angle) {
+        switch(angle) {
+			case 'xlDownward':
+				angle = -90;
+				break;
+			case 'xlHorizontal':
+				angle = 0;
+				break;
+			case 'xlUpward':
+				angle = 90;
+				break;
+			case 'xlVertical':
+				angle = 255;
+				break;
+		}
+		this.range.setAngle(angle);
+	};
+
+	Object.defineProperty(ApiRange.prototype, "Orientation", {
+		get: function () {
+			return this.GetOrientation();
+		},
+		set: function () {
+			return this.SetOrientation();
+		}
+	});
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiDrawing
@@ -2892,7 +3087,17 @@
 	 * @typeofeditors ["CSE"]
 	 */
 	ApiComment.prototype.Delete = function () {
-		this.Comment.worksheet.cellCommentator.removeComment(this.Comment.asc_getId());
+		this.WS.cellCommentator.removeComment(this.Comment.asc_getId());
+	};
+
+	/**
+	 * Returns the type of comment class.
+	 * @memberof ApiComment
+	 * @typeofeditors ["CSE"]
+	 * @returns {number}
+	 */
+	 ApiComment.prototype.GetClassType = function () {
+		return this.Comment.getType();
 	};
 
 	Api.prototype["Format"]                = Api.prototype.Format;
@@ -2963,6 +3168,9 @@
 	ApiRange.prototype["GetCol"] = ApiRange.prototype.GetCol;
 	ApiRange.prototype["Clear"] = ApiRange.prototype.Clear;
 	ApiRange.prototype["GetRows"] = ApiRange.prototype.GetRows;
+	ApiRange.prototype["GetCols"] = ApiRange.prototype.GetCols;
+	ApiRange.prototype["End"] = ApiRange.prototype.End;
+	ApiRange.prototype["GetCells"] = ApiRange.prototype.GetCells;
 	ApiRange.prototype["SetOffset"] = ApiRange.prototype.SetOffset;
 	ApiRange.prototype["GetAddress"] = ApiRange.prototype.GetAddress;	
 	ApiRange.prototype["GetCount"] = ApiRange.prototype.GetCount;
@@ -3001,6 +3209,8 @@
 	ApiRange.prototype["GetDefName"] = ApiRange.prototype.GetDefName;
 	ApiRange.prototype["GetComment"] = ApiRange.prototype.GetComment;
 	ApiRange.prototype["Select"] = ApiRange.prototype.Select;
+	ApiRange.prototype["SetOrientation"] = ApiRange.prototype.SetOrientation;
+	ApiRange.prototype["GetOrientation"] = ApiRange.prototype.GetOrientation;
 
 
 	ApiDrawing.prototype["GetClassType"]               =  ApiDrawing.prototype.GetClassType;
@@ -3056,6 +3266,7 @@
 
 	ApiComment.prototype["GetText"]              =  ApiComment.prototype.GetText;
 	ApiComment.prototype["Delete"]               =  ApiComment.prototype.Delete;
+	ApiComment.prototype["GetClassType"]         =  ApiComment.prototype.GetClassType;
 
 
 	function private_SetCoords(oDrawing, oWorksheet, nExtX, nExtY, nFromCol, nColOffset,  nFromRow, nRowOffset, pos){

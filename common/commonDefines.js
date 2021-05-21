@@ -44,10 +44,12 @@
 	var c_oAscMaxColumnWidth  = 255;
 	var c_oAscMaxRowHeight    = 409.5;
 	var c_nMaxConversionTime  = 900000;//depends on config
+	var c_nCommonRequestTime  = 30000;//30sec
 	var c_nMaxDownloadTitleLen= 255;
 	var c_nVersionNoBase64 = 10;
 	var c_dMaxParaRunContentLength = 256;
 	var c_rUneditableTypes = /^(?:(pdf|djvu|xps))$/;
+	var c_nMaxHyperlinkLength = 2083;
 
 	//files type for Saving & DownloadAs
 	var c_oAscFileType = {
@@ -216,6 +218,7 @@
 			PivotLabledColumns			: -313,
 			PivotOverlap				: -314,
 			PivotGroup					: -315,
+			PivotWithoutUnderlyingData	: -316,
 
 			ForceSaveButton: -331,
 			ForceSaveTimeout: -332,
@@ -273,7 +276,10 @@
 			CannotUseRelativeReference: 1007,
 			ValueMustBeGreaterThen: 1008,
 			IconDataRangesOverlap: 1009,
-			ErrorTop10Between: 1010
+			ErrorTop10Between: 1010,
+
+			SingleColumnOrRowError: 1020,
+			LocationOrDataRangeError: 1021
 		}
 	};
 
@@ -2174,10 +2180,12 @@
 	window['Asc']['c_oAscMaxColumnWidth']  = window['Asc'].c_oAscMaxColumnWidth = c_oAscMaxColumnWidth;
 	window['Asc']['c_oAscMaxRowHeight'] = window['Asc'].c_oAscMaxRowHeight = c_oAscMaxRowHeight;
     window['Asc']['c_nMaxConversionTime'] = window['Asc'].c_nMaxConversionTime = c_nMaxConversionTime;
+	window['Asc']['c_nCommonRequestTime'] = window['Asc'].c_nCommonRequestTime = c_nCommonRequestTime;
 	window['Asc']['c_nMaxDownloadTitleLen'] = window['Asc'].c_nMaxDownloadTitleLen = c_nMaxDownloadTitleLen;
 	window['Asc']['c_nVersionNoBase64'] = window['Asc'].c_nVersionNoBase64 = c_nVersionNoBase64;
 	window['Asc']['c_dMaxParaRunContentLength'] = window['Asc'].c_dMaxParaRunContentLength = c_dMaxParaRunContentLength;
 	window['Asc']['c_rUneditableTypes'] = window['Asc'].c_rUneditableTypes = c_rUneditableTypes;
+	window['Asc']['c_nMaxHyperlinkLength'] = window['Asc'].c_nMaxHyperlinkLength = c_nMaxHyperlinkLength;
 	window['Asc']['c_oAscFileType'] = window['Asc'].c_oAscFileType = c_oAscFileType;
 	window['Asc'].g_oLcidNameToIdMap = g_oLcidNameToIdMap;
 	window['Asc'].g_oLcidIdToNameMap = g_oLcidIdToNameMap;
@@ -2314,8 +2322,10 @@
 	prot['PivotLabledColumns']               = prot.PivotLabledColumns;
 	prot['PivotOverlap']                     = prot.PivotOverlap;
 	prot['PivotGroup']                       = prot.PivotGroup;
+	prot['PivotWithoutUnderlyingData']       = prot.PivotWithoutUnderlyingData;
 	prot['ForceSaveButton']                  = prot.ForceSaveButton;
 	prot['ForceSaveTimeout']                 = prot.ForceSaveTimeout;
+	prot['Submit']                           = prot.Submit;
 	prot['CannotChangeFormulaArray']         = prot.CannotChangeFormulaArray;
 	prot['MultiCellsInTablesFormulaArray']   = prot.MultiCellsInTablesFormulaArray;
 	prot['MailToClientMissing']				 = prot.MailToClientMissing;
@@ -2332,6 +2342,7 @@
 	prot['RemoveDuplicates']                 = prot.RemoveDuplicates;
 	prot['LargeRangeWarning']                = prot.LargeRangeWarning;
 	prot['LockedEditView']                   = prot.LockedEditView;
+	prot['Password']                         = prot.Password;
 	prot['SecondaryAxis']                    = prot.SecondaryAxis;
 	prot['ComboSeriesError']                 = prot.ComboSeriesError;
 
@@ -2352,6 +2363,8 @@
 	prot['ValueMustBeGreaterThen']           = prot.ValueMustBeGreaterThen;
 	prot['IconDataRangesOverlap']            = prot.IconDataRangesOverlap;
 	prot['ErrorTop10Between']                = prot.ErrorTop10Between;
+	prot['SingleColumnOrRowError']           = prot.SingleColumnOrRowError;
+	prot['LocationOrDataRangeError']         = prot.LocationOrDataRangeError;
 
 
 	window['Asc']['c_oAscAsyncAction']       = window['Asc'].c_oAscAsyncAction = c_oAscAsyncAction;

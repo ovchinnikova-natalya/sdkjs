@@ -1666,6 +1666,34 @@ function writeNestedReviewType(type, reviewInfo, fWriteRecord, fCallback) {
 	}
 }
 
+function ReadDocumentShd(length, bcr, oShd) {
+	var themeColor = { Auto: null, Color: null, Tint: null, Shade: null };
+	var themeFill = { Auto: null, Color: null, Tint: null, Shade: null };
+	oShd.Color = undefined;
+	var res = bcr.Read2(length, function (t, l) {
+		return bcr.ReadShd(t, l, oShd, themeColor, themeFill);
+	});
+	//1. this.Color по умолчанию должен быть undefined
+	if(!oShd.Color) {
+		oShd.Color = new AscCommonWord.CDocumentColor(255, 255, 255, true);
+	}
+	if (true == themeColor.Auto && null != oShd.Color)
+		oShd.Color.Auto = true;//todo менять полностью цвет
+	if (true === themeFill.Auto) {
+		if(!oShd.Fill) {
+			oShd.Fill = new AscCommonWord.CDocumentColor(255, 255, 255, true);
+		}
+		oShd.Fill.Auto = true;//todo менять полностью цвет
+	}
+	var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
+	if (null != unifill)
+		oShd.Unifill = unifill;
+	unifill = CreateThemeUnifill(themeFill.Color, themeFill.Tint, themeFill.Shade);
+	if (null != unifill)
+		oShd.themeFill = unifill;
+	return oShd;
+}
+
 function getThemeFontName(type) {
 	switch (type) {
 		case 0: return "majorAscii";
@@ -6050,7 +6078,7 @@ function BinaryDocumentTableWriter(memory, doc, oMapCommentId, oNumIdMap, copyPa
 	this.WriteDocPr = function(docPr)
 	{
 		var oThis = this;
-		this.bs.WriteItem(c_oSerDocPr.Id, function(){oThis.memory.WriteLong(oThis.saveParams.docPrId++);});
+		this.bs.WriteItem(c_oSerDocPr.Id, function(){oThis.memory.WriteLong(docPr.id);});
 		if (null != docPr.name) {
 			this.memory.WriteByte(c_oSerDocPr.Name);
 			this.memory.WriteString2(docPr.name);
@@ -6712,7 +6740,7 @@ function BinaryCommentsTableWriter(memory, doc, oMapCommentId, commentUniqueGuid
 		{
 			this.bs.WriteItem(c_oSer_CommentsType.Replies, function(){oThis.WriteReplies(comment.m_aReplies);});
 		}
-		if (null != comment.m_sOOTime)
+		if (null != comment.m_sOOTime && "" != comment.m_sOOTime)
 		{
 			this.memory.WriteByte(c_oSer_CommentsType.DateUtc);
 			this.memory.WriteString2(new Date(comment.m_sOOTime - 0).toISOString().slice(0, 19) + 'Z');
@@ -8275,6 +8303,8 @@ function BinaryFileReader(doc, openParams)
 				oCommentObj.m_sProviderId = comment.ProviderId;
 			if(null != comment.Date)
 				oCommentObj.m_sTime = comment.Date;
+			if(null != comment.OODate)
+				oCommentObj.m_sOOTime = comment.OODate;
 			if(null != comment.m_sQuoteText)
 				oCommentObj.m_sQuoteText = comment.m_sQuoteText;
 			if(null != comment.Text)
@@ -8731,17 +8761,7 @@ function Binary_pPrReader(doc, oReadResult, stream)
                 break;
             case c_oSerProp_pPrType.Shd:
                 pPr.Shd = new CDocumentShd();
-				var themeColor = {Auto: null, Color: null, Tint: null, Shade: null};
-                res = this.bcr.Read2(length, function(t, l){
-                        return oThis.bcr.ReadShd(t, l, pPr.Shd, themeColor);
-                    });
-				if(true == themeColor.Auto && null != pPr.Shd.Color)
-					pPr.Shd.Color.Auto = true;//todo менять полностью цвет
-				var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
-				if(null != unifill)
-					pPr.Shd.Unifill = unifill;
-				else if (null != pPr.Shd.Color && !pPr.Shd.Color.Auto)
-				    pPr.Shd.Unifill = AscFormat.CreteSolidFillRGB(pPr.Shd.Color.r, pPr.Shd.Color.g, pPr.Shd.Color.b);
+				ReadDocumentShd(length, this.bcr, pPr.Shd);
                 break;
             case c_oSerProp_pPrType.WidowControl:
 				pPr.WidowControl = this.stream.GetBool();
@@ -8880,8 +8900,6 @@ function Binary_pPrReader(doc, oReadResult, stream)
 			var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
 			if(null != unifill)
 				Border.Unifill = unifill;
-			else if (null != Border.Color && !Border.Color.Auto)
-			    Border.Unifill = AscFormat.CreteSolidFillRGB(Border.Color.r, Border.Color.g, Border.Color.b);
         }
         else
             res = c_oSerConstants.ReadUnknown;
@@ -9572,8 +9590,6 @@ function Binary_pPrReader(doc, oReadResult, stream)
 			var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
 			if(null != unifill)
 				Border.Unifill = unifill;
-			else if (null != Border.Color && !Border.Color.Auto)
-				Border.Unifill = AscFormat.CreteSolidFillRGB(Border.Color.r, Border.Color.g, Border.Color.b);
 		}
 		else
 			res = c_oSerConstants.ReadUnknown;
@@ -9751,22 +9767,10 @@ function Binary_rPrReader(doc, oReadResult, stream)
 				var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
 				if(null != unifill)
 					rPr.Unifill = unifill;
-				else if (null != rPr.Color && !rPr.Color.Auto)
-				    rPr.Unifill = AscFormat.CreteSolidFillRGB(rPr.Color.r, rPr.Color.g, rPr.Color.b);
 				break;
             case c_oSerProp_rPrType.Shd:
                 rPr.Shd = new CDocumentShd();
-                var themeColor = { Auto: null, Color: null, Tint: null, Shade: null };
-                res = this.bcr.Read2(length, function (t, l) {
-                    return oThis.bcr.ReadShd(t, l, rPr.Shd, themeColor);
-                });
-                if (true == themeColor.Auto && null != rPr.Shd.Color)
-                    rPr.Shd.Color.Auto = true;//todo менять полностью цвет
-                var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
-                if (null != unifill)
-                    rPr.Shd.Unifill = unifill;
-                else if (null != rPr.Shd.Color && !rPr.Shd.Color.Auto)
-                    rPr.Shd.Unifill = AscFormat.CreteSolidFillRGB(rPr.Shd.Color.r, rPr.Shd.Color.g, rPr.Shd.Color.b);
+				ReadDocumentShd(length, this.bcr, rPr.Shd);
                 break;
 			case c_oSerProp_rPrType.Vanish:
                 rPr.Vanish = this.stream.GetBool();
@@ -9917,17 +9921,7 @@ Binary_tblPrReader.prototype =
         {
             if(null == Pr.Shd)
                 Pr.Shd = new CDocumentShd();
-			var themeColor = {Auto: null, Color: null, Tint: null, Shade: null};
-            res = this.bcr.Read2(length, function(t, l){
-                return oThis.bcr.ReadShd(t, l, Pr.Shd, themeColor);
-            });
-			if(true == themeColor.Auto && null != Pr.Shd.Color)
-				Pr.Shd.Color.Auto = true;//todo менять полностью цвет
-			var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
-			if(null != unifill)
-				Pr.Shd.Unifill = unifill;
-			else if (null != Pr.Shd.Color && !Pr.Shd.Color.Auto)
-			    Pr.Shd.Unifill = AscFormat.CreteSolidFillRGB(Pr.Shd.Color.r, Pr.Shd.Color.g, Pr.Shd.Color.b);
+			ReadDocumentShd(length, this.bcr, Pr.Shd);
         }
 		else if( c_oSerProp_tblPrType.Layout === type )
 		{
@@ -10330,21 +10324,7 @@ Binary_tblPrReader.prototype =
             if(null == Pr.Shd)
                 Pr.Shd = new CDocumentShd();
             var oNewShd = {Value: undefined, Color: undefined, Unifill: undefined};
-			var themeColor = {Auto: null, Color: null, Tint: null, Shade: null};
-            res = this.bcr.Read2(length, function(t, l){
-                return oThis.bcr.ReadShd(t, l, oNewShd, themeColor);
-            });
-            var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
-            if (true == themeColor.Auto) {
-                if (!oNewShd.Color) {
-                    oNewShd.Color = new CDocumentColor(255, 255, 255);
-                }
-                oNewShd.Color.Auto = true;
-            }
-			if(null != unifill)
-				oNewShd.Unifill = unifill;
-			else if (null != oNewShd.Color && !oNewShd.Color.Auto)
-			    oNewShd.Unifill = AscFormat.CreteSolidFillRGB(oNewShd.Color.r, oNewShd.Color.g, oNewShd.Color.b);
+			ReadDocumentShd(length, this.bcr, oNewShd);
             //если есть themeColor или Color, то Value по умолчанию ShdClear(Тарифы_на_комплексное_обслуживание_клиен.docx)
             if (undefined == oNewShd.Value && oNewShd.Unifill) {
                 oNewShd.Value = Asc.c_oAscShdClear;
@@ -11151,8 +11131,6 @@ function Binary_DocumentTableReader(doc, oReadResult, openParams, stream, curNot
 			var unifill = CreateThemeUnifill(themeColor.Color, themeColor.Tint, themeColor.Shade);
 			if(null != unifill)
 				oBackground.Unifill = unifill;
-			else if (null != oBackground.Color && !oBackground.Color.Auto)
-				oBackground.Unifill = AscFormat.CreteSolidFillRGB(oBackground.Color.r, oBackground.Color.g, oBackground.Color.b);
 		} else if(c_oSerBackgroundType.pptxDrawing === type) {
 			var oDrawing = {};
 			var oParStruct = new OpenParStruct(null, null);
@@ -13389,7 +13367,9 @@ function Binary_oMathReader(stream, oReadResult, curNote, openParams)
             res = this.bcr.Read1(length, function(t, l){
                 return oThis.ReadMathCtrlPr(t,l,props);
             });
-			oElem.setCtrPrp(props.ctrlPr);
+			if (oElem) {
+				oElem.setCtrPrp(props.ctrlPr);
+			}
         }
 		else if (c_oSer_OMathContentType.Delimiter === type)
         {
@@ -17026,7 +17006,6 @@ function DocSaveParams(bMailMergeDocx, bMailMergeHtml, isCompatible, docParts) {
 	this.footnotesIndex = 0;
 	this.endnotes = {};
 	this.endnotesIndex = 0;
-	this.docPrId = 1;
 	this.moveRangeFromNameToId = {};
 	this.moveRangeToNameToId = {};
 	this.isCompatible = isCompatible;

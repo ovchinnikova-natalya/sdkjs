@@ -175,7 +175,8 @@
 		}
 		function convertPxToPt(value) {
 			value = value * sizePxinPt;
-			value = Asc.ceil(value / AscBrowser.retinaPixelRatio * 10) / 10;
+			//пункты округляем до сотых
+			value = Asc.ceil(value / AscBrowser.retinaPixelRatio * 100) / 100;
 			return value;
 		}
 
@@ -346,6 +347,38 @@
 			}
 			return oUniFill;
 		}
+
+		function getFullHyperlinkLength(str) {
+			var res = 0;
+			if (!str) {
+				return res;
+			}
+
+			var validStr = "ABCDEFabcdef0123456789";
+			//new RegExp('/^[xX]?[0-9a-fA-F]{6}$/', 'g')
+			var checkHex = function (_val) {
+				if (_val !== undefined && validStr.indexOf(_val) !== -1) {
+					return true;
+				}
+				return false;
+			};
+
+
+			for (var i = 0; i < str.length; i++) {
+				if (str[i] === "%") {
+					if (checkHex(str[i + 1]) && checkHex(str[i + 2])) {
+						res++;
+					} else {
+						res += 3;
+					}
+				} else {
+					res++;
+				}
+			}
+
+			return res;
+		}
+
 		var referenceType = {
 			A: 0,			// Absolute
 			ARRC: 1,	// Absolute row; relative column
@@ -1895,29 +1928,32 @@
 			return ret;
 		}
 
-		function getEndValueRange(dx, start, v1, v2) {
-			var x1, x2;
+		function getEndValueRange(dx, v1, v2, coord1, coord2) {
+			var leftDir = {x1: v2, x2: v1},
+				rightDir = {x1: v1, x2: v2},
+			    res;
 			if (0 !== dx) {
-				if (start === v1) {
-					x1 = v1;
-					x2 = v2;
-				} else if (start === v2) {
-					x1 = v2;
-					x2 = v1;
-				} else {
+				if (coord1 > v1 && coord2 < v2) {
 					if (0 > dx) {
-						x1 = v2;
-						x2 = v1;
+						res = coord1 === coord2 ? leftDir : rightDir;
 					} else {
-						x1 = v1;
-						x2 = v2;
+						res = coord1 === coord2 ? rightDir : leftDir;
 					}
+				} else if (coord1 === v1 && coord2 === v2) {
+					if (0 > dx) {
+						res = leftDir;
+					} else {
+						res = rightDir;
+					}
+				} else if (coord1 > v1 && coord2 === v2) {
+					res = leftDir;
+				} else if (coord1 === v1 && coord2 < v2) {
+					res = rightDir;
 				}
 			} else {
-				x1 = v1;
-				x2 = v2;
+				res = rightDir;
 			}
-			return {x1: x1, x2: x2};
+			return res;
 		}
 
 		function checkStylesNames(cellStyles) {
@@ -1953,7 +1989,7 @@
 			var widthWithRetina = AscCommon.AscBrowser.convertToRetinaValue(w, true);
 			var heightWithRetina = AscCommon.AscBrowser.convertToRetinaValue(h, true);
 
-			var ctx = getContext(w, h, wb);
+			var ctx = getContext(widthWithRetina, heightWithRetina, wb);
 			var oCanvas = ctx.getCanvas();
 			var graphics = getGraphics(ctx);
 
@@ -1976,7 +2012,7 @@
 					if (window["IS_NATIVE_EDITOR"]) {
 						window["native"]["BeginDrawStyle"](type, name);
 					}
-					drawStyle(ctx, graphics, wb.stringRender, oStyle, displayName, w, h);
+					drawStyle(ctx, graphics, wb.stringRender, oStyle, displayName, widthWithRetina, heightWithRetina);
 					if (window["IS_NATIVE_EDITOR"]) {
 						window["native"]["EndDrawStyle"]();
 					} else {
@@ -3247,6 +3283,8 @@
 		window['AscCommonExcel'].c_msPerDay = c_msPerDay;
 		window["AscCommonExcel"].applyFunction = applyFunction;
 		window['AscCommonExcel'].g_IncludeNewRowColInTable = true;
+		window['AscCommonExcel'].g_AutoCorrectHyperlinks = true;
+		window['AscCommonExcel'].g_ShowZeroCellValues = true;
 
 		window["Asc"]["cDate"] = window["Asc"].cDate = window['AscCommonExcel'].cDate = cDate;
 		prot = cDate.prototype;
@@ -3270,6 +3308,7 @@
 		window["AscCommonExcel"].getFindRegExp = getFindRegExp;
 		window["AscCommonExcel"].convertFillToUnifill = convertFillToUnifill;
 		window["AscCommonExcel"].replaceSpellCheckWords = replaceSpellCheckWords;
+		window["AscCommonExcel"].getFullHyperlinkLength = getFullHyperlinkLength;
 		window["Asc"].outputDebugStr = outputDebugStr;
 		window["Asc"].isNumberInfinity = isNumberInfinity;
 		window["Asc"].trim = trim;
@@ -3290,7 +3329,12 @@
 		window["AscCommonExcel"].drawGradientPreview = drawGradientPreview;
 		window["AscCommonExcel"].drawIconSetPreview = drawIconSetPreview;
 
-		window["AscCommonExcel"].referenceType = referenceType;
+		window["Asc"]["referenceType"] = window["AscCommonExcel"].referenceType = referenceType;
+		prot = referenceType;
+		prot['A'] = prot.A;
+		prot['ARRC'] = prot.ARRC;
+		prot['RRAC'] = prot.RRAC;
+		prot['R'] = prot.R;
 		window["Asc"].Range = Range;
 		window["AscCommonExcel"].Range3D = Range3D;
 		window["AscCommonExcel"].SelectionRange = SelectionRange;

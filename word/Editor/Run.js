@@ -3337,30 +3337,27 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 							}
 						}
 
-                        if (true !== NewRange)
-                        {
-                        	// Если с данного элемента не может начинаться строка, тогда считает все пробелы идущие
+						if (true !== NewRange)
+						{
+							// Если с данного элемента не может начинаться строка, тогда считает все пробелы идущие
 							// до него частью этого слова.
 							// Если места для разрыва строки еще не было, значит это все еще первый элемент идет, и
 							// тогда общую ширину пробелов прибавляем к ширине символа.
 							// Если разрыв были и с данного символа не может начинаться строка, тогда испоьльзуем
 							// предыдущий разрыв.
-							if (para_Text === ItemType)
+							if (PRS.LineBreakFirst && !Item.CanBeAtBeginOfLine())
 							{
-								if (PRS.LineBreakFirst && !Item.CanBeAtBeginOfLine())
-								{
-									FirstItemOnLine = true;
-									LetterLen       = LetterLen + SpaceLen;
-									SpaceLen        = 0;
-								}
-								else if (Item.CanBeAtBeginOfLine())
-								{
-									PRS.Set_LineBreakPos(Pos, FirstItemOnLine);
-								}
+								FirstItemOnLine = true;
+								LetterLen       = LetterLen + SpaceLen;
+								SpaceLen        = 0;
+							}
+							else if (Item.CanBeAtBeginOfLine())
+							{
+								PRS.Set_LineBreakPos(Pos, FirstItemOnLine);
 							}
 
-                            // Если текущий символ с переносом, например, дефис, тогда на нем заканчивается слово
-                            if (Item.Flags & PARATEXT_FLAGS_SPACEAFTER)//if ( true === Item.IsSpaceAfter() )
+							// Если текущий символ с переносом, например, дефис, тогда на нем заканчивается слово
+							if (Item.IsSpaceAfter())
 							{
 								// Добавляем длину пробелов до слова и ширину самого слова.
 								X += SpaceLen + LetterLen;
@@ -3372,7 +3369,7 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 								SpaceLen        = 0;
 								WordLen         = 0;
 							}
-                            else
+							else
 							{
 								Word    = true;
 								WordLen = LetterLen;
@@ -5725,12 +5722,15 @@ ParaRun.prototype.Draw_HighLights = function(PDSH)
     var bDrawColl = PDSH.DrawColl;
 
     var oCompiledPr = this.Get_CompiledPr(false);
-    var oShd = oCompiledPr.Shd;
-    var bDrawShd  = ( oShd === undefined || c_oAscShdNil === oShd.Value || (oShd.Color && true === oShd.Color.Auto) ? false : true );
-    var ShdColor  = ( true === bDrawShd ? oShd.Get_Color( PDSH.Paragraph ) : null );
+    var oShd        = oCompiledPr.Shd;
+    var bDrawShd    = ( oShd === undefined || oShd.IsNil() ? false : true );
+    var ShdColor    = ( true === bDrawShd ? oShd.GetSimpleColor(PDSH.Paragraph.GetTheme(), PDSH.Paragraph.GetColorMap()) : null );
 
-    if(this.Type == para_Math_Run && this.IsPlaceholder())
-        bDrawShd = false;
+    if (!ShdColor || true === ShdColor.Auto || (this.Type === para_Math_Run && this.IsPlaceholder()))
+	{
+		ShdColor = null;
+		bDrawShd = false;
+	}
 
     var X  = PDSH.X;
     var Y0 = PDSH.Y0;
@@ -5950,8 +5950,8 @@ ParaRun.prototype.Draw_Elements = function(PDSE)
         InfoMathText = new CMathInfoTextPr(InfoTextPr);
     }
 
-    if ( undefined !== CurTextPr.Shd && c_oAscShdNil !== CurTextPr.Shd.Value && !(CurTextPr.FontRef && CurTextPr.FontRef.Color) )
-        BgColor = CurTextPr.Shd.Get_Color( Para );
+	if (CurTextPr.Shd && !CurTextPr.Shd.IsNil() && !(CurTextPr.FontRef && CurTextPr.FontRef.Color))
+		BgColor = CurTextPr.Shd.GetSimpleColor(Para.GetTheme(), Para.GetColorMap());
 
     var AutoColor = ( undefined != BgColor && false === BgColor.Check_BlackAutoColor() ? new CDocumentColor( 255, 255, 255, false ) : new CDocumentColor( 0, 0, 0, false ) );
     var  RGBA, Theme = PDSE.Theme, ColorMap = PDSE.ColorMap;
@@ -11442,6 +11442,9 @@ ParaRun.prototype.GetLineByPosition = function(nPos)
  */
 ParaRun.prototype.PreDelete = function()
 {
+	// TODO: Перенести это, когда удаляется непосредственно элемент из класса
+	//       Сейчас работает не совсем корректно, потому что при большой вложенности у элементов чистится Parent,
+	//       хотя по факту он должен чистится только у первого уровня элементов, с которых начинается удаление
 	this.SetParent(null);
 
 	for (var nIndex = 0, nCount = this.Content.length; nIndex < nCount; ++nIndex)
@@ -12818,6 +12821,17 @@ ParaRun.prototype.GetParentForm = function()
 {
 	return (this.Parent instanceof CInlineLevelSdt && this.Parent.IsForm() ? this.Parent : null);
 };
+ParaRun.prototype.GetParentPictureContentControl = function()
+{
+	var arrParentCC = this.GetParentContentControls();
+	for (var nIndex = 0, nCount = arrParentCC.length; nIndex < nCount; ++nIndex)
+	{
+		if (arrParentCC[nIndex].IsPicture())
+			return arrParentCC[nIndex];
+	}
+
+	return null;
+};
 ParaRun.prototype.CopyTextFormContent = function(oRun)
 {
 	var nRunLen = oRun.Content.length;
@@ -12967,6 +12981,65 @@ ParaRun.prototype.ChangeTextCase = function(oEngine)
 				oEngine.SetStartSentence(false);
 		}
 	}
+};
+ParaRun.prototype.FindNextFillingForm = function(isNext, isCurrent, isStart)
+{
+	var nCurPos = this.Selection.Use === true ? this.Selection.EndPos : this.State.ContentPos;
+
+	var nStartPos = 0, nEndPos = 0;
+	if (isCurrent)
+	{
+		if (isStart)
+		{
+			nStartPos = nCurPos;
+			nEndPos   = isNext ? this.Content.length : 0;
+		}
+		else
+		{
+			nStartPos = isNext ? 0 : this.Content.length;
+			nEndPos   = nCurPos;
+		}
+	}
+	else
+	{
+		if (isNext)
+		{
+			nStartPos = 0;
+			nEndPos   = this.Content.length;
+		}
+		else
+		{
+			nStartPos = this.Content.length;
+			nEndPos   = 0;
+		}
+	}
+
+	if (isNext)
+	{
+		for (var nIndex = nStartPos; nIndex < nEndPos; ++nIndex)
+		{
+			if (this.Content[nIndex].FindNextFillingForm)
+			{
+				var oRes = this.Content[nIndex].FindNextFillingForm(true, false, false);
+				if (oRes)
+					return oRes;
+			}
+		}
+	}
+	else
+	{
+		for (var nIndex = nStartPos - 1; nIndex >= nEndPos; --nIndex)
+		{
+			if (this.Content[nIndex].FindNextFillingForm)
+			{
+				var oRes = this.Content[nIndex].FindNextFillingForm(false, false, false);
+				if (oRes)
+					return oRes;
+			}
+		}
+	}
+
+	return null;
 };
 
 function CParaRunStartState(Run)

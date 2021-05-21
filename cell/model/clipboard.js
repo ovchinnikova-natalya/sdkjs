@@ -533,7 +533,6 @@
 					sBase64 = this._getBinaryShapeContent(isIntoShape);
 				} else {
 					pptx_content_writer.Start_UseFullUrl();
-					pptx_content_writer.BinaryFileWriter.ClearIdMap();
 
 					var unselectedIndexes = [];
 					if(selectAll) {
@@ -596,7 +595,6 @@
 					//WRITE
 					var oBinaryFileWriter = new AscCommonExcel.BinaryFileWriter(wb, !ignoreCopyPaste ? selectionRange : false);
 					sBase64 = "xslData;" + oBinaryFileWriter.Write();
-					pptx_content_writer.BinaryFileWriter.ClearIdMap();
 					pptx_content_writer.End_UseFullUrl();
 
 					if(selectAll) {
@@ -1376,7 +1374,8 @@
 						}
 					}
 
-					var text = val[i].text.replace(/\n/g, '<br>');
+					var text = CopyPasteCorrectString(val[i].text);
+					text = text.replace(/\n/g, '<br>');
 
 					f = val[i].format;
 					var fn = f.getName();
@@ -2978,7 +2977,7 @@
 				var defrPr = oBinaryFileReader.oReadResult && oBinaryFileReader.oReadResult.DefrPr;
 				if (defrPr && newCDocument.Styles && newCDocument.Styles.Default && newCDocument.Styles.Default.TextPr) {
 					newCDocument.Styles.Default.TextPr.FontSize = defrPr.FontSize;
-					if (defrPr.RFonts) {
+					if (defrPr.RFonts && defrPr.RFonts.Ascii !== undefined) {
 						newCDocument.Styles.Default.TextPr.RFonts = defrPr.RFonts;
 					}
 				}
@@ -3309,7 +3308,9 @@
 
 				if (textImport) {
 					var advancedOptions = specialPasteProps.asc_getAdvancedOptions();
-					text = AscCommon.parseText(text, advancedOptions, true);
+					if (Asc.typeOf(text) !== "array") {
+						text = AscCommon.parseText(text, advancedOptions, true);
+					}
 				}
 				var aResult = this._getTableFromText(text, textImport);
 				if (aResult && !(aResult.onlyImages && window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor)) {

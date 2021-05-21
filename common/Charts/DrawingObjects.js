@@ -4110,6 +4110,12 @@ GraphicOption.prototype.union = function(oGraphicOption) {
     // Position
     //-----------------------------------------------------------------------------------
 
+    _this.getCurrentDrawingMacrosName = function() {
+        return _this.controller.getCurrentDrawingMacrosName();
+    };
+    _this.assignMacrosToCurrentDrawing = function(sGuid) {
+        _this.controller.assignMacrosToCurrentDrawing(sGuid);
+    };
     _this.setGraphicObjectLayer = function(layerType) {
         _this.controller.setGraphicObjectLayer(layerType);
     };
@@ -4142,8 +4148,18 @@ GraphicOption.prototype.union = function(oGraphicOption) {
                 objectInfo.object = _this.getDrawingBase(graphicObjectInfo.objectId);
                 if(objectInfo.object){
                     objectInfo.id = graphicObjectInfo.objectId;
-                    objectInfo.cursor = graphicObjectInfo.cursorType;
+                    var sCursorType = graphicObjectInfo.cursorType;
+                    var oApi = Asc.editor || editor;
+                    if(oApi) {
+                        if(!oApi.isShowShapeAdjustments()) {
+                            if(sCursorType !== "text") {
+                                sCursorType = "default";
+                            }
+                        }
+                    }
+                    objectInfo.cursor = sCursorType;
                     objectInfo.hyperlink = graphicObjectInfo.hyperlink;
+                    objectInfo.macro = graphicObjectInfo.macro;
                     objectInfo.tooltip = graphicObjectInfo.tooltip;
                 }
                 else{
